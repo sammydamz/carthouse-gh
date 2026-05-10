@@ -11,6 +11,7 @@ import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, Twitter
 interface Category {
   id: string
   name: string
+  children?: Category[]
 }
 
 interface Product {
@@ -190,30 +191,92 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
 function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll?: () => void }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (id: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleCategory = (id: string) => {
+    const newCats = filters.categories.includes(id)
+      ? filters.categories.filter((cid) => cid !== id)
+      : [...filters.categories, id]
+    onFilterChange({ categories: newCats })
+  }
+
+  const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
+  const standaloneCategories = categories.filter((c) => !c.children || c.children.length === 0)
 
   return (
-<aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
+    <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
       {/* Category Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {categories.slice(0, 8).map((cat) => (
-            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={filters.categories.includes(cat.id)}
-                onChange={(e) => {
-                  const newCats = e.target.checked
-                    ? [...filters.categories, cat.id]
-                    : filters.categories.filter((id) => id !== cat.id)
-                  onFilterChange({ categories: newCats })
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {parentCategories.map((cat) => {
+            const isOpen = expandedCats.has(cat.id)
+            const children = cat.children || []
+            return (
+              <div key={cat.id}>
+                <button
+                  onClick={() => toggleExpand(cat.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: 600, color: colors.ink }}
+                >
+                  <svg width={12} height={12} fill="none" stroke={colors.muted} viewBox="0 0 24 24" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  {cat.name}
+                </button>
+                {isOpen && children.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px 0 8px 20px' }}>
+                    {children.map((child) => {
+                      const selected = filters.categories.includes(child.id)
+                      return (
+                        <button
+                          key={child.id}
+                          onClick={() => toggleCategory(child.id)}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: rounded.pill,
+                            height: 32,
+                            border: selected ? 'none' : `1px solid ${colors.hairline}`,
+                            background: selected ? colors.ink : colors.surfaceSoft,
+                            color: selected ? colors.canvas : colors.ink,
+                            fontSize: 12,
+                            fontWeight: selected ? 600 : 400,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {child.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {standaloneCategories.map((cat) => {
+            const selected = filters.categories.includes(cat.id)
+            return (
+              <button
+                key={cat.id}
+                onClick={() => toggleCategory(cat.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: selected ? 700 : 400, color: selected ? colors.primary : colors.ink,
                 }}
-                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
-            </label>
-          ))}
-</div>
+              >
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: selected ? colors.primary : 'transparent', flexShrink: 0 }} />
+                {cat.name}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Status Filter */}
@@ -306,6 +369,25 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
 }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (id: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleCategory = (id: string) => {
+    const newCats = filters.categories.includes(id)
+      ? filters.categories.filter((cid) => cid !== id)
+      : [...filters.categories, id]
+    onFilterChange({ categories: newCats })
+  }
+
+  const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
+  const standaloneCategories = categories.filter((c) => !c.children || c.children.length === 0)
 
   if (!isOpen) return null
 
@@ -326,16 +408,66 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {categories.slice(0, 8).map((cat) => (
-                <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={filters.categories.includes(cat.id)} onChange={(e) => {
-                    const newCats = e.target.checked ? [...filters.categories, cat.id] : filters.categories.filter((id) => id !== cat.id)
-                    onFilterChange({ categories: newCats })
-                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
-                  <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
-                </label>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {parentCategories.map((cat) => {
+                const isOpen = expandedCats.has(cat.id)
+                const children = cat.children || []
+                return (
+                  <div key={cat.id}>
+                    <button
+                      onClick={() => toggleExpand(cat.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: 600, color: colors.ink }}
+                    >
+                      <svg width={12} height={12} fill="none" stroke={colors.muted} viewBox="0 0 24 24" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      {cat.name}
+                    </button>
+                    {isOpen && children.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px 0 8px 20px' }}>
+                        {children.map((child) => {
+                          const selected = filters.categories.includes(child.id)
+                          return (
+                            <button
+                              key={child.id}
+                              onClick={() => toggleCategory(child.id)}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: rounded.pill,
+                                height: 32,
+                                border: selected ? 'none' : `1px solid ${colors.hairline}`,
+                                background: selected ? colors.ink : colors.surfaceSoft,
+                                color: selected ? colors.canvas : colors.ink,
+                                fontSize: 12,
+                                fontWeight: selected ? 600 : 400,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {child.name}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {standaloneCategories.map((cat) => {
+                const selected = filters.categories.includes(cat.id)
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: selected ? 700 : 400, color: selected ? colors.primary : colors.ink,
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: selected ? colors.primary : 'transparent', flexShrink: 0 }} />
+                    {cat.name}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div style={{ marginBottom: 24 }}>
