@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 // Meta Design System Colors
 const colors = {
@@ -50,6 +51,8 @@ type FilterState = {
   search: string
   sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
   viewMode: 'grid_3' | 'grid_2'
+  page: number
+  perPage: number
 }
 
 // --- Mock Data ---
@@ -255,8 +258,9 @@ function Toolbar({ filters, onFilterChange }: { filters: FilterState; onFilterCh
 // 4. Product Card
 function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
   return (
-    <div
-      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s' }}
+    <a
+      href={`/store/products/${product.slug}`}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'block' }}
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
@@ -294,7 +298,7 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
           <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.critical, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
         )}
       </div>
-    </div>
+    </a>
   )
 }
 
@@ -306,6 +310,73 @@ function ProductGrid({ products, viewMode, onAddToCart }: { products: Product[];
       {products.map((product) => (
         <ProductCard key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
       ))}
+    </div>
+  )
+}
+
+// 6. Pagination
+function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) {
+  if (totalPages <= 1) return null
+  
+  const pages = []
+  const maxVisible = 5
+  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+  let end = Math.min(totalPages, start + maxVisible - 1)
+  if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1)
+  
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 32 }}>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+      >
+        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+      </button>
+      
+      {start > 1 && (
+        <>
+          <button onClick={() => onPageChange(1)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>1</button>
+          {start > 2 && <span style={{ color: colors.steel }}>...</span>}
+        </>
+      )}
+      
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          style={{
+            padding: '8px 14px',
+            borderRadius: 8,
+            border: currentPage === page ? 'none' : `1px solid ${colors.hairline}`,
+            background: currentPage === page ? colors.inkDeep : colors.canvas,
+            color: currentPage === page ? colors.canvas : colors.charcoal,
+            cursor: 'pointer',
+            fontWeight: currentPage === page ? 600 : 400,
+          }}
+        >
+          {page}
+        </button>
+      ))}
+      
+      {end < totalPages && (
+        <>
+          {end < totalPages - 1 && <span style={{ color: colors.steel }}>...</span>}
+          <button onClick={() => onPageChange(totalPages)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>{totalPages}</button>
+        </>
+      )}
+      
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+      >
+        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+      </button>
     </div>
   )
 }
@@ -350,51 +421,75 @@ function Footer() {
 }
 
 // --- Main Page ---
-export default function StorefrontPage() {
+function StorefrontPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [cartCount, setCartCount] = useState(0)
+  
   const [filters, setFilters] = useState<FilterState>({
-    status: 'all',
-    priceMin: 0,
-    priceMax: 10000,
-    categories: [],
-    search: '',
-    sortBy: 'trending',
-    viewMode: 'grid_3',
+    status: (searchParams.get('status') as FilterState['status']) || 'all',
+    priceMin: parseInt(searchParams.get('priceMin') || '0'),
+    priceMax: parseInt(searchParams.get('priceMax') || '10000'),
+    categories: searchParams.get('categories')?.split(',').filter(Boolean) || [],
+    search: searchParams.get('search') || '',
+    sortBy: (searchParams.get('sortBy') as FilterState['sortBy']) || 'trending',
+    viewMode: (searchParams.get('viewMode') as FilterState['viewMode']) || 'grid_3',
+    page: parseInt(searchParams.get('page') || '1'),
+    perPage: 20,
   })
 
   useEffect(() => {
     fetch('/api/public/categories').then((r) => r.json()).then((d) => setCategories(d)).catch(console.error)
-    fetch('/api/public/products?limit=50').then((r) => r.json()).then((d) => setProducts(d)).catch(console.error)
+    fetch('/api/public/products?limit=100').then((r) => r.json()).then((d) => setProducts(d)).catch(console.error)
   }, [])
 
   const filteredProducts = useMemo(() => {
     let result = [...products]
     
-    // Filter by availability based on status
     if (filters.status === 'in_stock') result = result.filter((p) => p.stock > 0)
     if (filters.status === 'on_sale') result = result.filter((p) => p.isAvailable)
-    
-    // Filter by price
     result = result.filter((p) => p.price >= filters.priceMin && p.price <= filters.priceMax)
-    
-    // Filter by category
     if (filters.categories.length > 0) result = result.filter((p) => p.category && filters.categories.includes(p.category.id))
-    
-    // Filter by search
     if (filters.search) result = result.filter((p) => p.name.toLowerCase().includes(filters.search.toLowerCase()))
     
-    // Sort
     if (filters.sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
     if (filters.sortBy === 'price_desc') result.sort((a, b) => b.price - a.price)
-    if (filters.sortBy === 'newest') result.sort((a, b) => 0) // Would need createdAt
+    if (filters.sortBy === 'newest') result.sort((a, b) => 0)
     
     return result
   }, [products, filters])
 
+  const paginatedProducts = useMemo(() => {
+    const start = (filters.page - 1) * filters.perPage
+    return filteredProducts.slice(start, start + filters.perPage)
+  }, [filteredProducts, filters.page, filters.perPage])
+
+  const totalPages = Math.ceil(filteredProducts.length / filters.perPage)
+
+  const updateURL = (update: Partial<FilterState>) => {
+    const params = new URLSearchParams()
+    if (update.status && update.status !== 'all') params.set('status', update.status)
+    if (update.priceMin && update.priceMin > 0) params.set('priceMin', update.priceMin.toString())
+    if (update.priceMax && update.priceMax < 10000) params.set('priceMax', update.priceMax.toString())
+    if (update.categories?.length) params.set('categories', update.categories.join(','))
+    if (update.search) params.set('search', update.search)
+    if (update.sortBy && update.sortBy !== 'trending') params.set('sortBy', update.sortBy)
+    if (update.viewMode && update.viewMode !== 'grid_3') params.set('viewMode', update.viewMode)
+    if (update.page && update.page > 1) params.set('page', update.page.toString())
+    
+    const query = params.toString()
+    router.push(query ? `/store?${query}` : '/store', { scroll: false })
+  }
+
   const handleFilterChange = (update: Partial<FilterState>) => {
+    if (update.page === undefined) {
+      update.page = 1
+    }
     setFilters((prev) => ({ ...prev, ...update }))
+    updateURL(update)
   }
 
   const handleAddToCart = () => {
@@ -411,7 +506,8 @@ export default function StorefrontPage() {
           
           <div style={{ flex: 1 }}>
             <Toolbar filters={filters} onFilterChange={handleFilterChange} />
-            <ProductGrid products={filteredProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
+            <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
+            <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
         </div>
       </main>
@@ -420,3 +516,13 @@ export default function StorefrontPage() {
     </div>
   )
 }
+
+function StorefrontWithSuspense() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <StorefrontPage />
+    </Suspense>
+  )
+}
+
+export default StorefrontWithSuspense
