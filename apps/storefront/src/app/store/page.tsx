@@ -207,12 +207,19 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
 }
 
 // 2. Sidebar Filter Panel
-function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[] }) {
+function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll?: () => void }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
 
   return (
     <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
+      {/* Clear All - at top of filter section */}
+      {onClearAll && (
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
+          <button onClick={onClearAll} style={{ border: 'none', background: 'none', color: colors.primary, fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '4px 0' }}>Clear all</button>
+        </div>
+      )}
+
       {/* Category Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
@@ -239,19 +246,21 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
       {/* Status Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
             <button
               key={status}
               onClick={() => onFilterChange({ status })}
               style={{
-                padding: '6px 16px',
-                borderRadius: 20,
+                padding: '8px 12px',
+                borderRadius: 8,
                 border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
-                background: filters.status === status ? colors.inkDeep : colors.canvas,
-                color: filters.status === status ? colors.canvas : colors.charcoal,
+                background: filters.status === status ? colors.primary : colors.surfaceSoft,
+                color: filters.status === status ? colors.onPrimary : colors.ink,
                 fontSize: 13,
+                fontWeight: 500,
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
               {status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}
@@ -350,14 +359,14 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
           </div>
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
                 <button key={status} onClick={() => onFilterChange({ status })} style={{
-                  padding: '6px 16px', borderRadius: 20,
+                  padding: '8px 12px', borderRadius: 8,
                   border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
-                  background: filters.status === status ? colors.inkDeep : colors.canvas,
-                  color: filters.status === status ? colors.canvas : colors.charcoal,
-                  fontSize: 13, cursor: 'pointer',
+                  background: filters.status === status ? colors.primary : colors.surfaceSoft,
+                  color: filters.status === status ? colors.onPrimary : colors.ink,
+                  fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
                 }}>{status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}</button>
               ))}
             </div>
@@ -395,71 +404,67 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
 }
 
 // 3. Toolbar
-function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean }) {
+function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll, isDesktop }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; isDesktop?: boolean }) {
+  const searchWidth = isDesktop ? 300 : 180
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 48, padding: '8px 0' }}>
-      {showFiltersButton ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 24, height: 48, padding: '8px 0' }}>
+      {/* Search - responsive width */}
+      <div style={{ width: searchWidth, flex: '0 0 ' + searchWidth + 'px', position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search"
+          value={filters.search}
+          onChange={(e) => onFilterChange({ search: e.target.value })}
+          style={{ width: '100%', height: 36, padding: '8px 10px 8px 28px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 13, outline: 'none', color: colors.ink, boxSizing: 'border-box' }}
+        />
+        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* Filter Button - ONLY show on tablet/mobile when sidebar is hidden */}
+      {showFiltersButton && (
         <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
           <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-          Filters
-        </button>
-      ) : (
-        <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
-          <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           Filters
           <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
         </button>
       )}
 
-      {/* Clear All */}
-      <button style={{ border: 'none', background: 'none', color: colors.ink, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear all</button>
-
-      {/* Refresh */}
-      <button style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-      </button>
-
-      {/* Inline Search */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        <input
-          type="text"
-          placeholder="Search by products"
-          value={filters.search}
-          onChange={(e) => onFilterChange({ search: e.target.value })}
-          style={{ width: '100%', height: 38, padding: '0 12px 0 36px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, outline: 'none', color: colors.ink }}
-        />
-        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-
       {/* Sort Dropdown */}
       <select
         value={filters.sortBy}
         onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
-        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130, color: colors.ink }}
+        style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, height: 36, flexShrink: 0 }}
       >
         <option value="trending">Trending</option>
-        <option value="price_asc">Price: Low to High</option>
-        <option value="price_desc">Price: High to Low</option>
+        <option value="price_asc">Price: Low → High</option>
+        <option value="price_desc">Price: High → Low</option>
         <option value="newest">Newest</option>
       </select>
 
       {/* View Toggle */}
-      <div style={{ display: 'flex', gap: 0 }}>
+      <div style={{ display: 'flex', gap: 0, flexShrink: 0 }}>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_3' })}
+          title="4 columns"
           style={{ width: 34, height: 34, borderRadius: '8px 0 0 8px', border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
         </button>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_2' })}
+          title="2 columns"
           style={{ width: 34, height: 34, borderRadius: '0 8px 8px 0', border: `1px solid ${colors.hairline}`, borderLeft: 'none', background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
         </button>
       </div>
+
+      {/* Refresh - LAST position (least used action) */}
+      <button title="Refresh" style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
     </div>
   )
 }
@@ -514,12 +519,12 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 // 5. Product Grid
 function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
   const cols = (() => {
-    if (isMobile) return 2
-    if (isTablet) return 3
+    if (isMobile) return 1
+    if (isTablet) return 2
     return viewMode === 'grid_3' ? 4 : 2
   })()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
       ))}
@@ -743,10 +748,10 @@ function StorefrontPage() {
 
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
-          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />}
+          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} onClearAll={handleClearAll} />}
 
           <div style={{ flex: 1 }}>
-            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} />
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} isDesktop={isDesktop} />
             <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} isDesktop={isDesktop} isTablet={isTablet} isMobile={isMobile} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
