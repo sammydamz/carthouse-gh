@@ -589,7 +589,7 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 // 5. Product Grid
 function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
   const cols = (() => {
-    if (isMobile) return 2
+    if (isMobile) return 1
     if (isTablet) return 2
     return viewMode === 'grid_3' ? 4 : 2
   })()
