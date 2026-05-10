@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
@@ -10,6 +11,7 @@ import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, Twitter
 interface Category {
   id: string
   name: string
+  children?: Category[]
 }
 
 interface Product {
@@ -186,39 +188,82 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
 }
 
 // 2. Sidebar Filter Panel
-function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll?: () => void }) {
+function Sidebar({ filters, onFilterChange, categories, products, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; products: Product[]; onClearAll?: () => void }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (id: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleCategory = (id: string) => {
+    const newCats = filters.categories[0] === id ? [] : [id]
+    onFilterChange({ categories: newCats, brands: [] })
+  }
+
+  const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
+
+  const availableBrands = useMemo(() => {
+    if (filters.categories.length === 0) return []
+    const catProducts = products.filter((p) => p.category && filters.categories.includes(p.category.id))
+    return [...new Set(catProducts.map((p) => p.supplier?.name).filter(Boolean))] as string[]
+  }, [products, filters.categories])
 
   return (
     <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
-      {/* Clear All - at top of filter section */}
-      {onClearAll && (
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
-          <button onClick={onClearAll} style={{ border: 'none', background: 'none', color: colors.primary, fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '4px 0' }}>Clear all</button>
-        </div>
-      )}
-
       {/* Category Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {categories.slice(0, 8).map((cat) => (
-            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={filters.categories.includes(cat.id)}
-                onChange={(e) => {
-                  const newCats = e.target.checked
-                    ? [...filters.categories, cat.id]
-                    : filters.categories.filter((id) => id !== cat.id)
-                  onFilterChange({ categories: newCats })
-                }}
-                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
-            </label>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {parentCategories.map((cat) => {
+            const isOpen = expandedCats.has(cat.id)
+            const children = cat.children || []
+            return (
+              <div key={cat.id}>
+                <button
+                  onClick={() => toggleExpand(cat.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: 600, color: colors.ink }}
+                >
+                  <svg width={12} height={12} fill="none" stroke={colors.muted} viewBox="0 0 24 24" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  {cat.name}
+                </button>
+                {isOpen && children.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px 0 8px 20px' }}>
+                    {children.map((child) => {
+                      const selected = filters.categories.includes(child.id)
+                      return (
+                        <button
+                          key={child.id}
+                          onClick={() => toggleCategory(child.id)}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: rounded.pill,
+                            height: 32,
+                            border: selected ? 'none' : `1px solid ${colors.hairline}`,
+                            background: selected ? colors.ink : colors.surfaceSoft,
+                            color: selected ? colors.canvas : colors.ink,
+                            fontSize: 12,
+                            fontWeight: selected ? 600 : 400,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {child.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -257,7 +302,7 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
             type="number"
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
-onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
+            onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
             style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="0"
           />
@@ -266,45 +311,76 @@ onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseIn
             type="number"
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
-onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
+            onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
             style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="10000"
           />
         </div>
       </div>
 
-      {/* Brand Filter */}
-      <div>
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {brands.map((brand) => (
-            <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={filters.brands.includes(brand)}
-                onChange={(e) => {
-                  const newBrands = e.target.checked
-                    ? [...filters.brands, brand]
-                    : filters.brands.filter((b) => b !== brand)
-                  onFilterChange({ brands: newBrands })
-                }}
-                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
-            </label>
-          ))}
+{/* Brand Filter */}
+      {availableBrands.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {availableBrands.map((brand) => (
+              <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={filters.brands.includes(brand)}
+                  onChange={(e) => {
+                    const newBrands = e.target.checked
+                      ? [...filters.brands, brand]
+                      : filters.brands.filter((b) => b !== brand)
+                    onFilterChange({ brands: newBrands })
+                  }}
+                  style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+                />
+                <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+)}
+
+      {/* Clear All */}
+      {onClearAll && (
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-start' }}>
+          <button onClick={onClearAll} style={{ border: 'none', background: 'none', color: colors.primary, fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '4px 0' }}>Clear all</button>
+        </div>
+      )}
     </aside>
   )
 }
 
 // 2b. Filter Drawer (mobile/tablet)
-function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, onClearAll }: {
-  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll: () => void
+function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, products, onClearAll }: {
+  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; products: Product[]; onClearAll: () => void
 }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (id: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+const toggleCategory = (id: string) => {
+    const newCats = filters.categories[0] === id ? [] : [id]
+    onFilterChange({ categories: newCats, brands: [] })
+  }
+
+  const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
+
+  const availableBrands = useMemo(() => {
+    if (filters.categories.length === 0) return []
+    const catProducts = products.filter((p) => p.category && filters.categories.includes(p.category.id))
+    return [...new Set(catProducts.map((p) => p.supplier?.name).filter(Boolean))] as string[]
+  }, [products, filters.categories])
 
   if (!isOpen) return null
 
@@ -325,16 +401,51 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {categories.slice(0, 8).map((cat) => (
-                <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={filters.categories.includes(cat.id)} onChange={(e) => {
-                    const newCats = e.target.checked ? [...filters.categories, cat.id] : filters.categories.filter((id) => id !== cat.id)
-                    onFilterChange({ categories: newCats })
-                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
-                  <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
-                </label>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {parentCategories.map((cat) => {
+                const isOpen = expandedCats.has(cat.id)
+                const children = cat.children || []
+                return (
+                  <div key={cat.id}>
+                    <button
+                      onClick={() => toggleExpand(cat.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: 600, color: colors.ink }}
+                    >
+                      <svg width={12} height={12} fill="none" stroke={colors.muted} viewBox="0 0 24 24" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      {cat.name}
+                    </button>
+                    {isOpen && children.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px 0 8px 20px' }}>
+                        {children.map((child) => {
+                          const selected = filters.categories.includes(child.id)
+                          return (
+                            <button
+                              key={child.id}
+                              onClick={() => toggleCategory(child.id)}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: rounded.pill,
+                                height: 32,
+                                border: selected ? 'none' : `1px solid ${colors.hairline}`,
+                                background: selected ? colors.ink : colors.surfaceSoft,
+                                color: selected ? colors.canvas : colors.ink,
+                                fontSize: 12,
+                                fontWeight: selected ? 600 : 400,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {child.name}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
           <div style={{ marginBottom: 24 }}>
@@ -359,20 +470,22 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
               <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
             </div>
           </div>
-          <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {brands.map((brand) => (
-                <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
-                    const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
-                    onFilterChange({ brands: newBrands })
-                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
-                  <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
-                </label>
-              ))}
+          {availableBrands.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {availableBrands.map((brand) => (
+                  <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
+                      const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
+                      onFilterChange({ brands: newBrands })
+                    }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                    <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.hairlineSoft}`, display: 'flex', gap: 12 }}>
           <button onClick={onClearAll} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
@@ -384,47 +497,28 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
 }
 
 // 3. Toolbar
-function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll, isDesktop }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; isDesktop?: boolean }) {
-  const searchWidth = isDesktop ? 300 : 180
+function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 24, height: 48, padding: '8px 0' }}>
-      {/* Search - responsive width */}
-      <div style={{ width: searchWidth, flex: '0 0 ' + searchWidth + 'px', position: 'relative' }}>
-        <input
-          type="text"
-          placeholder="Search"
-          value={filters.search}
-          onChange={(e) => onFilterChange({ search: e.target.value })}
-          style={{ width: '100%', height: 44, padding: '0 16px 0 44px', borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 13, outline: 'none', color: colors.ink, boxSizing: 'border-box' }}
-        />
-        <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: colors.muted, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+{/* Sort Dropdown */}
+      <div style={{ position: 'relative' }}>
+        <select
+          value={filters.sortBy}
+          onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
+          style={{ padding: '8px 36px 8px 12px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0, appearance: 'none' }}
+        >
+          <option value="trending">Trending</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="price_desc">Price: High → Low</option>
+          <option value="newest">Newest</option>
+        </select>
+        <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: colors.muted, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9l6 6 6-6" />
         </svg>
-      </div>
-
-      {/* Filter Button - ONLY show on tablet/mobile when sidebar is hidden */}
-      {showFiltersButton && (
-        <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
-          <svg width={18} height={18} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-          Filters
-          <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
-        </button>
-      )}
-
-      {/* Sort Dropdown */}
-      <select
-        value={filters.sortBy}
-        onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
-        style={{ padding: '8px 12px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0 }}
-      >
-        <option value="trending">Trending</option>
-        <option value="price_asc">Price: Low → High</option>
-        <option value="price_desc">Price: High → Low</option>
-        <option value="newest">Newest</option>
-      </select>
+</div>
 
       {/* View Toggle */}
-      <div style={{ display: 'flex', gap: 0, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_3' })}
           title="4 columns"
@@ -441,11 +535,7 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
         </button>
       </div>
 
-      {/* Refresh - LAST position (least used action) */}
-      <button title="Refresh" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width={18} height={18} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-      </button>
-    </div>
+      </div>
   )
 }
 
@@ -581,57 +671,59 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
 }
 
 // 6. Footer
+const deepBlue = '#0B1D3A'
+
 function Footer() {
   return (
-    <footer style={{ background: colors.canvas, borderTop: `1px solid ${colors.hairlineSoft}`, padding: '64px 24px' }}>
+    <footer style={{ background: deepBlue, padding: '64px 24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
-          <p style={{ fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+          <div style={{ fontSize: 20, fontWeight: 700, color: colors.onPrimary, marginBottom: 16 }}>CartHouse GH</div>
+          <p style={{ fontSize: 14, color: '#ffffffcc', lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
         </div>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.onPrimary }}>Contact</h4>
 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <PhoneIcon size={16} color={colors.muted} />
-            <span style={{ fontSize: 14, color: colors.muted }}>+233 20 123 4567</span>
+            <PhoneIcon size={16} color="#ffffffcc" />
+            <span style={{ fontSize: 14, color: '#ffffffcc' }}>+233 20 123 4567</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <MailIcon size={16} color={colors.muted} />
-            <span style={{ fontSize: 14, color: colors.muted }}>info@carthousegh.com</span>
+            <MailIcon size={16} color="#ffffffcc" />
+            <span style={{ fontSize: 14, color: '#ffffffcc' }}>info@carthousegh.com</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <LocationIcon size={16} color={colors.muted} />
-            <span style={{ fontSize: 14, color: colors.muted }}>Accra, Ghana</span>
+            <LocationIcon size={16} color="#ffffffcc" />
+            <span style={{ fontSize: 14, color: '#ffffffcc' }}>Accra, Ghana</span>
           </div>
         </div>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.onPrimary }}>Quick Links</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[{ label: 'About Us', href: '/about' }, { label: 'Shop', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'Contact', href: '/contact' }].map((link) => (
-              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: colors.muted, textDecoration: 'none' }}>{link.label}</Link>
+              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: '#ffffffcc', textDecoration: 'none' }}>{link.label}</Link>
             ))}
           </div>
         </div>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.onPrimary }}>Follow Us</h4>
           <div style={{ display: 'flex', gap: 12 }}>
-<a href="#" aria-label="Facebook" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
-              <FacebookIcon size={18} color={colors.muted} />
+<a href="#" aria-label="Facebook" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffffcc' }}>
+              <FacebookIcon size={18} color="#ffffffcc" />
             </a>
-            <a href="#" aria-label="Instagram" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
-              <InstagramIcon size={18} color={colors.muted} />
+            <a href="#" aria-label="Instagram" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffffcc' }}>
+              <InstagramIcon size={18} color="#ffffffcc" />
             </a>
-            <a href="#" aria-label="Twitter" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
-              <TwitterIcon size={18} color={colors.muted} />
+            <a href="#" aria-label="Twitter" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffffcc' }}>
+              <TwitterIcon size={18} color="#ffffffcc" />
             </a>
-            <a href="#" aria-label="WhatsApp" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
-              <WhatsAppIcon size={18} color={colors.muted} />
+            <a href="#" aria-label="WhatsApp" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffffcc' }}>
+              <WhatsAppIcon size={18} color="#ffffffcc" />
             </a>
           </div>
         </div>
       </div>
-      <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: colors.mutedSoft }}>© 2026 CartHouse GH. All rights reserved.</p>
+      <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: '#ffffff99' }}>&copy; 2026 CartHouse GH. All rights reserved.</p>
       </div>
     </footer>
   )
@@ -646,8 +738,16 @@ function StorefrontPage() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [products, setProducts] = useState<Product[]>([])
+
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: () => fetch('/api/public/categories').then((r) => r.json()),
+  })
+
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: () => fetch('/api/public/products?limit=100').then((r) => r.json()),
+  })
   
   const [filters, setFilters] = useState<FilterState>({
     status: (searchParams.get('status') as FilterState['status']) || 'all',
@@ -661,11 +761,6 @@ function StorefrontPage() {
     page: parseInt(searchParams.get('page') || '1'),
     perPage: 20,
   })
-
-  useEffect(() => {
-    fetch('/api/public/categories').then((r) => r.json()).then((d) => setCategories(d)).catch(console.error)
-    fetch('/api/public/products?limit=100').then((r) => r.json()).then((d) => setProducts(d)).catch(console.error)
-  }, [])
 
   const filteredProducts = useMemo(() => {
     let result = [...products]
@@ -742,15 +837,16 @@ function StorefrontPage() {
         filters={filters}
         onFilterChange={handleFilterChange}
         categories={categories}
+        products={products}
         onClearAll={handleClearAll}
       />
 
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
-          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} onClearAll={handleClearAll} />}
+          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} products={products} onClearAll={handleClearAll} />}
 
           <div style={{ flex: 1 }}>
-            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} isDesktop={isDesktop} />
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} />
             <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} isDesktop={isDesktop} isTablet={isTablet} isMobile={isMobile} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>

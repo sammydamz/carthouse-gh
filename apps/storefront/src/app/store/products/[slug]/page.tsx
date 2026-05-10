@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { colors, rounded } from '@/lib/design-system'
 import { useCart } from '@/lib/cart'
@@ -146,7 +147,7 @@ function ProductInfo({ product }: { product: Product }) {
           </button>
         </div>
         
-        <button
+<button
           onClick={() => addItem({
             productId: product.id,
             name: product.name,
@@ -158,7 +159,7 @@ function ProductInfo({ product }: { product: Product }) {
           })}
           disabled={currentStock === 0}
           style={{
-            flex: 1,
+            width: 260,
             height: 52,
             borderRadius: rounded.pill,
             border: 'none',
@@ -171,12 +172,6 @@ function ProductInfo({ product }: { product: Product }) {
         >
           Add to Cart
         </button>
-        
-        <button
-          style={{ width: 52, height: 52, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <svg width={20} height={20} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-        </button>
       </div>
       
       <div style={{ borderTop: `1px solid ${colors.hairlineSoft}`, paddingTop: 24 }}>
@@ -184,40 +179,25 @@ function ProductInfo({ product }: { product: Product }) {
         <p style={{ fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>{product.description || 'No description available.'}</p>
       </div>
       
-      {product.supplier && (
-        <div style={{ marginTop: 24, padding: 16, background: colors.surfaceSoft, borderRadius: rounded.lg }}>
-          <span style={{ fontSize: 12, color: colors.muted }}>Sold by</span>
-          <div style={{ fontSize: 14, fontWeight: 600, color: colors.ink, marginTop: 4 }}>{product.supplier.name}</div>
-        </div>
-      )}
-    </div>
+      </div>
   )
 }
 
 export default function ProductDetailPage() {
   const params = useParams()
   const slug = params.slug as string
-  
-  const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [cartCount, setCartCount] = useState(0)
-  
-  useEffect(() => {
-    fetch(`/api/public/products/${slug}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Product not found')
-        return res.json()
-      })
-      .then((data) => {
-        setProduct(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [slug])
+
+  const { data: product, isLoading: loading, error: queryError } = useQuery<Product>({
+    queryKey: ['product', slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/public/products/${slug}`)
+      if (!res.ok) throw new Error('Product not found')
+      return res.json()
+    },
+  })
+
+  const error = queryError ? (queryError as Error).message : ''
+  const { itemCount: cartCount } = useCart()
   
   if (loading) {
     return (
@@ -270,22 +250,22 @@ export default function ProductDetailPage() {
         </div>
       </main>
       
-      {/* Footer */}
-      <footer style={{ background: colors.canvas, borderTop: `1px solid ${colors.hairlineSoft}`, padding: '64px 24px', marginTop: 64 }}>
+{/* Footer */}
+      <footer style={{ background: '#0B1D3A', padding: '64px 24px', marginTop: 64 }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
-            <p style={{ fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#ffffff', marginBottom: 16 }}>CartHouse GH</div>
+            <p style={{ fontSize: 14, color: '#ffffffcc', lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
           </div>
           <div>
-            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
-            <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>+233 20 123 4567</p>
-            <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>info@carthousegh.com</p>
-            <p style={{ fontSize: 14, color: colors.muted }}>Accra, Ghana</p>
+            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#ffffff' }}>Contact</h4>
+            <p style={{ fontSize: 14, color: '#ffffffcc', marginBottom: 8 }}>+233 20 123 4567</p>
+            <p style={{ fontSize: 14, color: '#ffffffcc', marginBottom: 8 }}>info@carthousegh.com</p>
+            <p style={{ fontSize: 14, color: '#ffffffcc' }}>Accra, Ghana</p>
           </div>
         </div>
-        <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: colors.mutedSoft }}>© 2026 CartHouse GH. All rights reserved.</p>
+        <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+          <p style={{ fontSize: 12, color: '#ffffff99' }}>&copy; 2026 CartHouse GH. All rights reserved.</p>
         </div>
       </footer>
     </div>

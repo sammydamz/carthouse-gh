@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { bustCategories } from '@/lib/cache'
 
 export async function GET(
   request: Request,
@@ -48,6 +49,8 @@ export async function PUT(
       },
     })
 
+    bustCategories()
+
     return NextResponse.json(category)
   } catch (error) {
     console.error('Error updating category:', error)
@@ -64,6 +67,8 @@ export async function DELETE(
     const { id } = await params
 
     await prisma.category.delete({ where: { id } })
+
+    bustCategories()
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <rect width="120" height="40" fill="transparent"/>
+  <text x="0" y="30" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#000" letter-spacing="-1">EA</text>
+  <circle cx="38" cy="26" r="3" fill="#057dbc"/>
+  <text x="48" y="20" font-family="monospace" font-size="7" font-weight="700" fill="#757575" letter-spacing="1.5">FIRST CLASS</text>
+  <text x="48" y="30" font-family="monospace" font-size="6" font-weight="400" fill="#757575" letter-spacing="1">AUTOS</text>
+</svg>

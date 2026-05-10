@@ -1,5 +1,6 @@
 import { CartProvider } from '@/lib/cart'
 import { CartDrawer } from '@/components/CartDrawer'
+import { Providers } from '@/lib/providers'
 
 export default function RootLayout({
   children,
@@ -13,10 +14,12 @@ export default function RootLayout({
         <meta name="description" content="Your trusted destination for premium electronics and gadgets in Ghana" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
-        <CartProvider>
-          {children}
-          <CartDrawer />
-        </CartProvider>
+        <Providers>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
+        </Providers>
       </body>
     </html>
   )

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { bustAll } from '@/lib/cache'
 
 export async function GET(
   request: Request,
@@ -69,6 +70,8 @@ export async function PUT(
       }
     }
 
+    bustAll()
+
     return NextResponse.json(product)
   } catch (error) {
     console.error('Error updating product:', error)
@@ -88,6 +91,8 @@ export async function DELETE(
       where: { id },
       data: { isDeleted: true },
     })
+
+    bustAll()
 
     return NextResponse.json({ success: true })
   } catch (error) {

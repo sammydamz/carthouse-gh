@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { bustCategories } from '@/lib/cache'
 
 export async function GET() {
   try {
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
         parentId: data.parentId || null,
       },
     })
+
+    bustCategories()
 
     return NextResponse.json(category, { status: 201 })
   } catch (error) {

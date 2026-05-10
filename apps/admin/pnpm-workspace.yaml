@@ -1,0 +1,4 @@
+overrides:
+  '@eslint/plugin-kit@<0.3.4': '>=0.3.4'
+  effect@<3.20.0: '>=3.20.0'
+  postcss@<8.5.10: '>=8.5.10'
