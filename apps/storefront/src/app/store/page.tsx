@@ -180,8 +180,9 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
             {itemCount > 0 && (
               <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{itemCount}</span>
             )}
-          </button>
-        </nav>
+</button>
+      </div>
+
       </div>
     </header>
   )
@@ -525,7 +526,6 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
       )}
 
       {/* View Toggle */}
-      {isDesktop && (
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid' })}
@@ -542,7 +542,6 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
           <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="2" rx="1" /><rect x="4" y="11" width="16" height="2" rx="1" /><rect x="4" y="17" width="16" height="2" rx="1" /></svg>
         </button>
       </div>
-      )}
 
       </div>
   )
@@ -604,7 +603,7 @@ function ProductCardHorizontal({ product }: { product: Product }) {
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
-      <div style={{ width: 140, height: 140, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
+      <div style={{ width: 100, height: 100, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
         {product.media[0] ? (
           <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -614,6 +613,7 @@ function ProductCardHorizontal({ product }: { product: Product }) {
       <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>{product.name}</span>
+        {product.description && <span style={{ fontSize: 12, color: colors.charcoal, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.description}</span>}
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
           {product.stock > 0 ? (
