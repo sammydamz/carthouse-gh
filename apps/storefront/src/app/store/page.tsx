@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
+import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, TwitterIcon, WhatsAppIcon } from '@/components/FooterIcons'
 
 // Meta Design System Colors
 const colors = {
@@ -395,9 +396,18 @@ function Footer() {
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
-          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📞 +233 20 123 4567</p>
-          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📧 info@carthousegh.com</p>
-          <p style={{ fontSize: 14, color: colors.steel }}>📍 Accra, Ghana</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <PhoneIcon size={16} color={colors.steel} />
+            <span style={{ fontSize: 14, color: colors.steel }}>+233 20 123 4567</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <MailIcon size={16} color={colors.steel} />
+            <span style={{ fontSize: 14, color: colors.steel }}>info@carthousegh.com</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LocationIcon size={16} color={colors.steel} />
+            <span style={{ fontSize: 14, color: colors.steel }}>Accra, Ghana</span>
+          </div>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
@@ -410,9 +420,18 @@ function Footer() {
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
           <div style={{ display: 'flex', gap: 12 }}>
-            {['FB', 'IG', 'X', 'WA'].map((social) => (
-              <span key={social} style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel, fontSize: 12 }}>{social}</span>
-            ))}
+            <a href="#" aria-label="Facebook" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
+              <FacebookIcon size={16} color={colors.steel} />
+            </a>
+            <a href="#" aria-label="Instagram" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
+              <InstagramIcon size={16} color={colors.steel} />
+            </a>
+            <a href="#" aria-label="Twitter" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
+              <TwitterIcon size={16} color={colors.steel} />
+            </a>
+            <a href="#" aria-label="WhatsApp" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
+              <WhatsAppIcon size={16} color={colors.steel} />
+            </a>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useCart } from '@/lib/cart'
+import { ArrowLeftIcon, AlertCircleIcon } from '@/components/FooterIcons'
 
 const colors = {
   canvas: '#ffffff',
@@ -246,9 +247,12 @@ export default function ProductDetailPage() {
   if (error || !product) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{ fontSize: 48 }}>😕</div>
+        <AlertCircleIcon size={48} color={colors.steel} />
         <div style={{ fontSize: 18, color: colors.charcoal }}>{error || 'Product not found'}</div>
-        <a href="/store" style={{ color: colors.primary, textDecoration: 'none' }}>← Back to store</a>
+        <a href="/store" style={{ color: colors.primary, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ArrowLeftIcon size={16} color={colors.primary} />
+          Back to store
+        </a>
       </div>
     )
   }
