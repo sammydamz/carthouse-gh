@@ -55,6 +55,27 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireAdmin()
+    const { id } = await params
+    const data = await request.json()
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: {
+        ...(data.isAvailable !== undefined && { isAvailable: data.isAvailable }),
+      },
+    })
+
+    bustAll()
+    return NextResponse.json(product)
+  } catch (error) {
+    console.error('Error toggling product availability:', error)
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin()

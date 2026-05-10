@@ -99,8 +99,8 @@ export default function ProductsPage() {
 
   const toggleAvailability = async (product: Product) => {
     await fetch(`/api/admin/products/${product.id}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...product, isAvailable: !product.isAvailable }),
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isAvailable: !product.isAvailable }),
     })
     fetchData()
   }
