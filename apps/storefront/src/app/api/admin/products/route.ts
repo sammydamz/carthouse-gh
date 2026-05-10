@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { bustAll } from '@/lib/cache'
 
 export async function GET() {
   try {
@@ -56,6 +57,8 @@ export async function POST(request: Request) {
         })),
       })
     }
+
+    bustAll()
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {

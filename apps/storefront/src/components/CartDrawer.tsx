@@ -20,7 +20,7 @@ export function CartDrawer() {
           zIndex: 200,
         }}
       />
-      <div
+<div
         style={{
           position: 'fixed',
           top: 0,
@@ -33,6 +33,7 @@ export function CartDrawer() {
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '-8px 0 24px rgba(0,0,0,0.12)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
         <div
