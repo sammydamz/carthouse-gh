@@ -188,7 +188,7 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
 }
 
 // 2. Sidebar Filter Panel
-function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll?: () => void }) {
+function Sidebar({ filters, onFilterChange, categories, products, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; products: Product[]; onClearAll?: () => void }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
@@ -202,13 +202,17 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
   }
 
   const toggleCategory = (id: string) => {
-    const newCats = filters.categories.includes(id)
-      ? filters.categories.filter((cid) => cid !== id)
-      : [...filters.categories, id]
-    onFilterChange({ categories: newCats })
+    const newCats = filters.categories[0] === id ? [] : [id]
+    onFilterChange({ categories: newCats, brands: [] })
   }
 
   const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
+
+  const availableBrands = useMemo(() => {
+    if (filters.categories.length === 0) return []
+    const catProducts = products.filter((p) => p.category && filters.categories.includes(p.category.id))
+    return [...new Set(catProducts.map((p) => p.supplier?.name).filter(Boolean))] as string[]
+  }, [products, filters.categories])
 
   return (
     <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
@@ -314,28 +318,32 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
         </div>
       </div>
 
-      {/* Brand Filter */}
-      <div>
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {brands.map((brand) => (
-            <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={filters.brands.includes(brand)}
-                onChange={(e) => {
-                  const newBrands = e.target.checked
-                    ? [...filters.brands, brand]
-                    : filters.brands.filter((b) => b !== brand)
-                  onFilterChange({ brands: newBrands })
-                }}
-                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
-            </label>
-          ))}
+{/* Brand Filter */}
+      {availableBrands.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {availableBrands.map((brand) => (
+              <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={filters.brands.includes(brand)}
+                  onChange={(e) => {
+                    const newBrands = e.target.checked
+                      ? [...filters.brands, brand]
+                      : filters.brands.filter((b) => b !== brand)
+                    onFilterChange({ brands: newBrands })
+                  }}
+                  style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+                />
+                <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+        </div>
+      )}
 
       {/* Clear All */}
       {onClearAll && (
@@ -348,8 +356,8 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
 }
 
 // 2b. Filter Drawer (mobile/tablet)
-function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, onClearAll }: {
-  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll: () => void
+function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, products, onClearAll }: {
+  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; products: Product[]; onClearAll: () => void
 }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
@@ -363,16 +371,18 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
     })
   }
 
-  const toggleCategory = (id: string) => {
-    const newCats = filters.categories.includes(id)
-      ? filters.categories.filter((cid) => cid !== id)
-      : [...filters.categories, id]
-    onFilterChange({ categories: newCats })
+const toggleCategory = (id: string) => {
+    const newCats = filters.categories[0] === id ? [] : [id]
+    onFilterChange({ categories: newCats, brands: [] })
   }
 
   const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
 
-  if (!isOpen) return null
+  const availableBrands = useMemo(() => {
+    if (filters.categories.length === 0) return []
+    const catProducts = products.filter((p) => p.category && filters.categories.includes(p.category.id))
+    return [...new Set(catProducts.map((p) => p.supplier?.name).filter(Boolean))] as string[]
+  }, [products, filters.categories])
 
   return (
     <>
@@ -460,20 +470,25 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
               <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
             </div>
           </div>
-          <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {brands.map((brand) => (
-                <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
-                    const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
-                    onFilterChange({ brands: newBrands })
-                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
-                  <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
-                </label>
-              ))}
+          {availableBrands.length > 0 && (
+{availableBrands.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {availableBrands.map((brand) => (
+                  <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
+                      const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
+                      onFilterChange({ brands: newBrands })
+                    }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                    <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+            </div>
+          )}
         </div>
         <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.hairlineSoft}`, display: 'flex', gap: 12 }}>
           <button onClick={onClearAll} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
@@ -825,12 +840,13 @@ function StorefrontPage() {
         filters={filters}
         onFilterChange={handleFilterChange}
         categories={categories}
+        products={products}
         onClearAll={handleClearAll}
       />
 
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
-          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} onClearAll={handleClearAll} />}
+          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} products={products} onClearAll={handleClearAll} />}
 
           <div style={{ flex: 1 }}>
             <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} />
