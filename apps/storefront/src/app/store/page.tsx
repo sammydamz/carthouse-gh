@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useCart } from '@/lib/cart'
 
 // Meta Design System Colors
 const colors = {
@@ -61,7 +62,9 @@ const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus'
 // --- Components ---
 
 // 1. Navbar
-function Navbar({ cartCount, search, onSearchChange }: { cartCount: number; search: string; onSearchChange: (v: string) => void }) {
+function Navbar({ search, onSearchChange }: { search: string; onSearchChange: (v: string) => void }) {
+  const { itemCount, setIsOpen } = useCart()
+  
   return (
     <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -89,12 +92,12 @@ function Navbar({ cartCount, search, onSearchChange }: { cartCount: number; sear
         <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
           <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
-          <button style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            {cartCount > 0 && (
-              <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cartCount}</span>
+            {itemCount > 0 && (
+              <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{itemCount}</span>
             )}
           </button>
         </nav>
@@ -424,10 +427,10 @@ function Footer() {
 function StorefrontPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { addItem } = useCart()
   
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
-  const [cartCount, setCartCount] = useState(0)
   
   const [filters, setFilters] = useState<FilterState>({
     status: (searchParams.get('status') as FilterState['status']) || 'all',
@@ -492,13 +495,20 @@ function StorefrontPage() {
     updateURL(update)
   }
 
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + 1)
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.media[0] || null,
+      maxStock: product.stock,
+    })
   }
 
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
-      <Navbar cartCount={cartCount} search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
+      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
       
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>

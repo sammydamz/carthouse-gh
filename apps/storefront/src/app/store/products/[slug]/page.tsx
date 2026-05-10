@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useCart } from '@/lib/cart'
 
 const colors = {
   canvas: '#ffffff',
@@ -93,7 +94,8 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
   )
 }
 
-function ProductInfo({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
+function ProductInfo({ product }: { product: Product }) {
+  const { addItem } = useCart()
   const [quantity, setQuantity] = useState(1)
   const [selectedVariant, setSelectedVariant] = useState(product.variants[0]?.id || '')
   
@@ -161,7 +163,15 @@ function ProductInfo({ product, onAddToCart }: { product: Product; onAddToCart: 
         </div>
         
         <button
-          onClick={onAddToCart}
+          onClick={() => addItem({
+            productId: product.id,
+            name: product.name,
+            price: currentPrice,
+            quantity,
+            image: product.media[0] || null,
+            variant: variant ? `${variant.size || ''} ${variant.color || ''}`.trim() : undefined,
+            maxStock: currentStock,
+          })}
           disabled={currentStock === 0}
           style={{
             flex: 1,
@@ -225,10 +235,6 @@ export default function ProductDetailPage() {
       })
   }, [slug])
   
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + 1)
-  }
-  
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -276,7 +282,7 @@ export default function ProductDetailPage() {
           <div style={{ flex: 1, maxWidth: 500 }}>
             <ImageGallery images={product.media} name={product.name} />
           </div>
-          <ProductInfo product={product} onAddToCart={handleAddToCart} />
+          <ProductInfo product={product} />
         </div>
       </main>
       
