@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -136,7 +136,7 @@ export default function CategoriesPage() {
                 </thead>
                 <tbody>
                   {rootCategories.map((category) => (
-                    <>
+                    <Fragment key={category.id}>
                       <tr key={category.id} className="border-b bg-muted/30 font-semibold">
                         <td className="py-3 px-4">{category.name}</td>
                         <td className="py-3 px-4 text-muted-foreground">{category.slug}</td>
@@ -157,7 +157,7 @@ export default function CategoriesPage() {
                           </td>
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                   {rootCategories.length === 0 && (
                     <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No categories yet</td></tr>

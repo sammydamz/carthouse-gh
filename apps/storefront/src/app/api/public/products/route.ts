@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getProductsCache } from '@/lib/cache'
 
 export async function GET(request: Request) {
   try {
@@ -8,13 +7,6 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const categoryId = searchParams.get('categoryId')
     const search = searchParams.get('search')
-
-    const cacheKey = `products:${limit}:${categoryId || ''}:${search || ''}`
-    const cache = getProductsCache()
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const where: Record<string, unknown> = {
       isDeleted: false,
@@ -40,8 +32,6 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
       take: limit,
     })
-
-    cache.set(cacheKey, products)
 
     return NextResponse.json(products)
   } catch (error) {
