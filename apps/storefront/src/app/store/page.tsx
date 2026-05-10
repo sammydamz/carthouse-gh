@@ -598,11 +598,11 @@ function ProductCardHorizontal({ product }: { product: Product }) {
   return (
     <a
       href={`/store/products/${product.slug}`}
-      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'flex' }}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'flex', maxWidth: 500 }}
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
-      <div style={{ width: 100, height: 100, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
+      <div style={{ width: 80, height: 80, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
         {product.media[0] ? (
           <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -630,7 +630,7 @@ function ProductCardHorizontal({ product }: { product: Product }) {
 function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid' | 'list'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
   if (viewMode === 'list') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {products.map((product) => (
           <ProductCardHorizontal key={product.id} product={product} />
         ))}
