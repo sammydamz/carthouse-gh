@@ -341,9 +341,7 @@ function Sidebar({ filters, onFilterChange, categories, products, onClearAll }: 
             ))}
           </div>
         </div>
-      )}
-        </div>
-      )}
+)}
 
       {/* Clear All */}
       {onClearAll && (
@@ -471,7 +469,6 @@ const toggleCategory = (id: string) => {
             </div>
           </div>
           {availableBrands.length > 0 && (
-{availableBrands.length > 0 && (
             <div>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -485,8 +482,6 @@ const toggleCategory = (id: string) => {
                   </label>
                 ))}
               </div>
-            </div>
-          )}
             </div>
           )}
         </div>
