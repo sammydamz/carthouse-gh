@@ -5,15 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 import { colors, rounded } from '@/lib/design-system'
+import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, TwitterIcon, WhatsAppIcon } from '@/components/FooterIcons'
 
 interface Category {
-  id: string
-  name: string
-  slug: string
-  parentId: string | null
-  imageUrl: string | null
-}
-
 interface Product {
   id: string
   name: string
@@ -593,9 +587,18 @@ function Footer() {
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
-          <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>📞 +233 20 123 4567</p>
-          <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>📧 info@carthousegh.com</p>
-          <p style={{ fontSize: 14, color: colors.muted }}>📍 Accra, Ghana</p>
+<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <PhoneIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>+233 20 123 4567</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <MailIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>info@carthousegh.com</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LocationIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>Accra, Ghana</span>
+          </div>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
@@ -608,9 +611,18 @@ function Footer() {
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
           <div style={{ display: 'flex', gap: 12 }}>
-            {['FB', 'IG', 'X', 'WA'].map((social) => (
-              <span key={social} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted, fontSize: 12 }}>{social}</span>
-            ))}
+<a href="#" aria-label="Facebook" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <FacebookIcon size={18} color={colors.muted} />
+            </a>
+            <a href="#" aria-label="Instagram" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <InstagramIcon size={18} color={colors.muted} />
+            </a>
+            <a href="#" aria-label="Twitter" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <TwitterIcon size={18} color={colors.muted} />
+            </a>
+            <a href="#" aria-label="WhatsApp" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <WhatsAppIcon size={18} color={colors.muted} />
+            </a>
           </div>
         </div>
       </div>
