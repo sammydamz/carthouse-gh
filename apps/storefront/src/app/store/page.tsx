@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 
 // Meta Design System Colors
@@ -49,6 +50,7 @@ type FilterState = {
   priceMin: number
   priceMax: number
   categories: string[]
+  brands: string[]
   search: string
   sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
   viewMode: 'grid_3' | 'grid_2'
@@ -58,6 +60,9 @@ type FilterState = {
 
 // --- Mock Data ---
 const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus']
+
+// --- CSS Constants ---
+const slideInKeyframes = `@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`
 
 // --- Components ---
 
@@ -70,6 +75,8 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       {/* Backdrop */}
       <div
         onClick={onClose}
+        role="presentation"
+        aria-label="Close menu"
         style={{
           position: 'fixed',
           inset: 0,
@@ -78,7 +85,10 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         }}
       />
       {/* Drawer */}
-      <div style={{
+      <div
+        role="dialog"
+        aria-label="Mobile menu"
+        style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -91,7 +101,7 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         display: 'flex',
         flexDirection: 'column',
       }}>
-        <style>{`@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
+        <style>{slideInKeyframes}</style>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -107,7 +117,7 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         {/* Links */}
         <nav style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {['Explore', 'Deals', 'About Us', 'Contact'].map((link) => (
-            <a key={link} href="#" style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link}</a>
+            <Link key={link} href="#" style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link}</Link>
           ))}
         </nav>
       </div>
@@ -133,8 +143,8 @@ function Navbar({ search, onSearchChange, onMenuToggle }: { search: string; onSe
         {/* Left: Logo + Hamburger (mobile) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {isMobile && onMenuToggle && (
-            <button onClick={onMenuToggle} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width={22} height={22} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+            <button onClick={onMenuToggle} aria-label="Open menu" style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width={22} height={22} fill="none" stroke={colors.ink} viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -160,11 +170,11 @@ function Navbar({ search, onSearchChange, onMenuToggle }: { search: string; onSe
         )}
 
         {/* Nav Links & Cart (desktop) / Cart only (mobile) */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }} aria-label="Main navigation">
           {!isMobile && (
             <>
-              <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
-              <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
+              <Link href="/store" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</Link>
+              <Link href="/store?status=on_sale" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</Link>
             </>
           )}
           <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -265,7 +275,17 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {brands.map((brand) => (
             <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input type="checkbox" style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+              <input
+                type="checkbox"
+                checked={filters.brands.includes(brand)}
+                onChange={(e) => {
+                  const newBrands = e.target.checked
+                    ? [...filters.brands, brand]
+                    : filters.brands.filter((b) => b !== brand)
+                  onFilterChange({ brands: newBrands })
+                }}
+                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+              />
               <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
             </label>
           ))}
@@ -513,6 +533,7 @@ function StorefrontPage() {
     priceMin: parseInt(searchParams.get('priceMin') || '0'),
     priceMax: parseInt(searchParams.get('priceMax') || '10000'),
     categories: searchParams.get('categories')?.split(',').filter(Boolean) || [],
+    brands: searchParams.get('brands')?.split(',').filter(Boolean) || [],
     search: searchParams.get('search') || '',
     sortBy: (searchParams.get('sortBy') as FilterState['sortBy']) || 'trending',
     viewMode: (searchParams.get('viewMode') as FilterState['viewMode']) || 'grid_3',
@@ -532,6 +553,7 @@ function StorefrontPage() {
     if (filters.status === 'on_sale') result = result.filter((p) => p.isAvailable)
     result = result.filter((p) => p.price >= filters.priceMin && p.price <= filters.priceMax)
     if (filters.categories.length > 0) result = result.filter((p) => p.category && filters.categories.includes(p.category.id))
+    if (filters.brands.length > 0) result = result.filter((p) => p.supplier && filters.brands.includes(p.supplier.name))
     if (filters.search) result = result.filter((p) => p.name.toLowerCase().includes(filters.search.toLowerCase()))
     
     if (filters.sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
@@ -554,6 +576,7 @@ function StorefrontPage() {
     if (update.priceMin && update.priceMin > 0) params.set('priceMin', update.priceMin.toString())
     if (update.priceMax && update.priceMax < 10000) params.set('priceMax', update.priceMax.toString())
     if (update.categories?.length) params.set('categories', update.categories.join(','))
+    if (update.brands?.length) params.set('brands', update.brands.join(','))
     if (update.search) params.set('search', update.search)
     if (update.sortBy && update.sortBy !== 'trending') params.set('sortBy', update.sortBy)
     if (update.viewMode && update.viewMode !== 'grid_3') params.set('viewMode', update.viewMode)
