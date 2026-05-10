@@ -1,23 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-const colors = {
-  canvas: '#ffffff',
-  surfaceSoft: '#f1f4f7',
-  inkDeep: '#0a1317',
-  ink: '#1c1e21',
-  charcoal: '#444950',
-  steel: '#5d6c7b',
-  stone: '#8595a4',
-  hairline: '#ced0d4',
-  hairlineSoft: '#dee3e9',
-  primary: '#0064e0',
-  onPrimary: '#ffffff',
-  success: '#31a24c',
-  warning: '#f2a918',
-  critical: '#e41e3f',
-}
+import { colors, rounded } from '@/lib/design-system'
 
 interface OrderItem {
   id: string
@@ -127,29 +111,29 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', color: colors.steel }}>Loading...</div>
+      <div style={{ padding: 24, textAlign: 'center', color: colors.muted }}>Loading...</div>
     )
   }
 
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: colors.inkDeep }}>Orders</h1>
-        <span style={{ fontSize: 14, color: colors.steel }}>{orders.length} orders</span>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: colors.ink }}>Orders</h1>
+        <span style={{ fontSize: 14, color: colors.muted }}>{orders.length} orders</span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedOrder ? '1fr 400px' : '1fr', gap: 24 }}>
         <div>
-          <div style={{ background: colors.canvas, borderRadius: 12, border: `1px solid ${colors.hairlineSoft}`, overflow: 'hidden' }}>
+          <div style={{ background: colors.canvas, borderRadius: rounded.xl, border: `1px solid ${colors.hairlineSoft}`, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: colors.surfaceSoft, borderBottom: `1px solid ${colors.hairlineSoft}` }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Order</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Customer</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Total</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Payment</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.charcoal }}>Date</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Order</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Customer</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Total</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Payment</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: colors.muted }}>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,7 +148,7 @@ export default function OrdersPage() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ fontSize: 14, color: colors.ink }}>{order.customerName}</div>
-                      <div style={{ fontSize: 12, color: colors.steel }}>{order.customerPhone}</div>
+                      <div style={{ fontSize: 12, color: colors.muted }}>{order.customerPhone}</div>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>GH₵{order.totalAmount.toFixed(2)}</span>
@@ -172,11 +156,11 @@ export default function OrdersPage() {
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '4px 8px',
-                        borderRadius: 4,
+                        borderRadius: rounded.pill,
                         fontSize: 11,
                         fontWeight: 600,
                         background: paymentStatusColors[order.paymentStatus]?.bg || colors.surfaceSoft,
-                        color: paymentStatusColors[order.paymentStatus]?.text || colors.charcoal,
+                        color: paymentStatusColors[order.paymentStatus]?.text || colors.muted,
                       }}>
                         {order.paymentStatus}
                       </span>
@@ -184,17 +168,17 @@ export default function OrdersPage() {
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '4px 8px',
-                        borderRadius: 4,
+                        borderRadius: rounded.pill,
                         fontSize: 11,
                         fontWeight: 600,
                         background: statusColors[order.orderStatus]?.bg || colors.surfaceSoft,
-                        color: statusColors[order.orderStatus]?.text || colors.charcoal,
+                        color: statusColors[order.orderStatus]?.text || colors.muted,
                       }}>
                         {order.orderStatus.replace('_', ' ')}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: 12, color: colors.steel }}>{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span style={{ fontSize: 12, color: colors.muted }}>{new Date(order.createdAt).toLocaleDateString()}</span>
                     </td>
                   </tr>
                 ))}
@@ -204,19 +188,19 @@ export default function OrdersPage() {
         </div>
 
         {selectedOrder && (
-          <div style={{ background: colors.canvas, borderRadius: 12, border: `1px solid ${colors.hairlineSoft}`, padding: 24, height: 'fit-content' }}>
+          <div style={{ background: colors.canvas, borderRadius: rounded.xl, border: `1px solid ${colors.hairlineSoft}`, padding: 24, height: 'fit-content' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: colors.inkDeep }}>{selectedOrder.orderNumber}</h2>
-              <button onClick={() => setSelectedOrder(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: colors.steel }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: colors.ink }}>{selectedOrder.orderNumber}</h2>
+              <button onClick={() => setSelectedOrder(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: colors.muted, width: 44, height: 44, borderRadius: rounded.pill, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width={20} height={20} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
             <div style={{ marginBottom: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: colors.ink, marginBottom: 8 }}>Customer</h3>
-              <p style={{ fontSize: 14, color: colors.charcoal }}>{selectedOrder.customerName}</p>
-              <p style={{ fontSize: 13, color: colors.steel }}>{selectedOrder.customerPhone}</p>
-              <p style={{ fontSize: 13, color: colors.steel }}>{selectedOrder.customerAddress}, {selectedOrder.customerRegion}</p>
+              <p style={{ fontSize: 14, color: colors.muted }}>{selectedOrder.customerName}</p>
+              <p style={{ fontSize: 13, color: colors.muted }}>{selectedOrder.customerPhone}</p>
+              <p style={{ fontSize: 13, color: colors.muted }}>{selectedOrder.customerAddress}, {selectedOrder.customerRegion}</p>
             </div>
 
             <div style={{ marginBottom: 20 }}>
@@ -225,14 +209,14 @@ export default function OrdersPage() {
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
                   <div>
                     <div style={{ fontSize: 13, color: colors.ink }}>{item.productName || 'Product'}</div>
-                    <div style={{ fontSize: 12, color: colors.steel }}>Qty: {item.quantity} {item.size && `| ${item.size}`}</div>
+                    <div style={{ fontSize: 12, color: colors.muted }}>Qty: {item.quantity} {item.size && `| ${item.size}`}</div>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: colors.ink }}>GH₵{(item.price * item.quantity).toFixed(2)}</div>
                 </div>
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>Total</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: colors.inkDeep }}>GH₵{selectedOrder.totalAmount.toFixed(2)}</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>GH₵{selectedOrder.totalAmount.toFixed(2)}</span>
               </div>
             </div>
 
@@ -242,7 +226,7 @@ export default function OrdersPage() {
                 value={selectedOrder.orderStatus}
                 onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
                 disabled={updating}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.canvas, marginBottom: 8 }}
+                style={{ width: '100%', borderRadius: rounded.pill, height: 44, padding: '10px 16px', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.canvas, marginBottom: 8 }}
               >
                 <option value="PENDING">Pending</option>
                 <option value="CONFIRMED">Confirmed</option>
@@ -254,7 +238,7 @@ export default function OrdersPage() {
                 value={selectedOrder.paymentStatus}
                 onChange={(e) => updatePaymentStatus(selectedOrder.id, e.target.value)}
                 disabled={updating}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.canvas }}
+                style={{ width: '100%', borderRadius: rounded.pill, height: 44, padding: '10px 16px', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.canvas }}
               >
                 <option value="PENDING">Pending</option>
                 <option value="PAID">Paid</option>
@@ -265,7 +249,7 @@ export default function OrdersPage() {
             {selectedOrder.deliveryInstructions && (
               <div>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: colors.ink, marginBottom: 8 }}>Notes</h3>
-                <p style={{ fontSize: 13, color: colors.charcoal }}>{selectedOrder.deliveryInstructions}</p>
+                <p style={{ fontSize: 13, color: colors.muted }}>{selectedOrder.deliveryInstructions}</p>
               </div>
             )}
           </div>

@@ -2,37 +2,12 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useCart } from '@/lib/cart'
+import { colors, rounded } from '@/lib/design-system'
 import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, TwitterIcon, WhatsAppIcon } from '@/components/FooterIcons'
 
-// Meta Design System Colors
-const colors = {
-  canvas: '#ffffff',
-  surfaceSoft: '#f1f4f7',
-  inkDeep: '#0a1317',
-  ink: '#1c1e21',
-  charcoal: '#444950',
-  slate: '#4b4c4f',
-  steel: '#5d6c7b',
-  stone: '#8595a4',
-  hairline: '#ced0d4',
-  hairlineSoft: '#dee3e9',
-  primary: '#0064e0',
-  onPrimary: '#ffffff',
-  success: '#31a24c',
-  warning: '#f2a918',
-  critical: '#e41e3f',
-}
-
-// --- Types ---
 interface Category {
-  id: string
-  name: string
-  slug: string
-  parentId: string | null
-  imageUrl: string | null
-}
-
 interface Product {
   id: string
   name: string
@@ -50,6 +25,7 @@ type FilterState = {
   priceMin: number
   priceMax: number
   categories: string[]
+  brands: string[]
   search: string
   sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
   viewMode: 'grid_3' | 'grid_2'
@@ -60,40 +36,138 @@ type FilterState = {
 // --- Mock Data ---
 const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus']
 
+// --- CSS Constants ---
+const slideInKeyframes = `@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`
+const slideInRightKeyframes = `@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }`
+
+// --- Responsive Hook ---
+function useResponsive() {
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkWidth = () => {
+      const w = window.innerWidth
+      setIsDesktop(w >= 1200)
+      setIsTablet(w >= 768 && w < 1200)
+      setIsMobile(w < 768)
+    }
+    checkWidth()
+    window.addEventListener('resize', checkWidth)
+    return () => window.removeEventListener('resize', checkWidth)
+  }, [])
+
+  return { isDesktop, isTablet, isMobile }
+}
+
 // --- Components ---
 
+// 1. Mobile Menu Drawer
+function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        role="presentation"
+        aria-label="Close menu"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 200,
+        }}
+      />
+      {/* Drawer */}
+      <div
+        role="dialog"
+        aria-label="Mobile menu"
+        style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: 280,
+        height: '100vh',
+        background: colors.canvas,
+        zIndex: 201,
+        boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+        animation: 'slideIn 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <style>{slideInKeyframes}</style>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
+            <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>Menu</span>
+          </div>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {/* Links */}
+        <nav style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {[{ label: 'Explore', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'About Us', href: '/about' }, { label: 'Contact', href: '/contact' }].map((link) => (
+            <Link key={link.label} href={link.href} style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link.label}</Link>
+          ))}
+        </nav>
+      </div>
+    </>
+  )
+}
+
 // 1. Navbar
-function Navbar({ search, onSearchChange }: { search: string; onSearchChange: (v: string) => void }) {
+function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }: { search: string; onSearchChange: (v: string) => void; onMenuToggle?: () => void; isMobile?: boolean }) {
   const { itemCount, setIsOpen } = useCart()
-  
+  const isMobile = isMobileProp ?? false
+
   return (
     <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Logo */}
+        {/* Left: Logo + Hamburger (mobile) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {isMobile && onMenuToggle && (
+            <button onClick={onMenuToggle} aria-label="Open menu" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width={22} height={22} fill="none" stroke={colors.ink} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
           <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
           <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>CartHouse GH</span>
         </div>
 
-        {/* Search */}
-        <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
-          />
-          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+        {/* Search (hidden on mobile) */}
+        {!isMobile && (
+          <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              style={{ width: '100%', height: 44, borderRadius: rounded.pill, padding: '0 16px', boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
+            />
+            <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: colors.muted }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        )}
 
-        {/* Nav Links & Cart */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
-          <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
-          <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {/* Nav Links & Cart (desktop) / Cart only (mobile) */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }} aria-label="Main navigation">
+          {!isMobile && (
+            <>
+              <Link href="/store" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</Link>
+              <Link href="/store?status=on_sale" style={{ color: colors.muted, textDecoration: 'none', fontSize: 15 }}>Deals</Link>
+            </>
+          )}
+          <button onClick={() => setIsOpen(true)} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
@@ -108,12 +182,19 @@ function Navbar({ search, onSearchChange }: { search: string; onSearchChange: (v
 }
 
 // 2. Sidebar Filter Panel
-function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[] }) {
+function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll?: () => void }) {
   const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
   const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
 
   return (
     <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
+      {/* Clear All - at top of filter section */}
+      {onClearAll && (
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
+          <button onClick={onClearAll} style={{ border: 'none', background: 'none', color: colors.primary, fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '4px 0' }}>Clear all</button>
+        </div>
+      )}
+
       {/* Category Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
@@ -140,19 +221,22 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
       {/* Status Filter */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
             <button
               key={status}
               onClick={() => onFilterChange({ status })}
               style={{
-                padding: '6px 16px',
-                borderRadius: 20,
+                padding: '10px 16px',
+                borderRadius: rounded.pill,
+                height: 44,
                 border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
-                background: filters.status === status ? colors.inkDeep : colors.canvas,
-                color: filters.status === status ? colors.canvas : colors.charcoal,
+                background: filters.status === status ? colors.primary : colors.surfaceSoft,
+                color: filters.status === status ? colors.onPrimary : colors.ink,
                 fontSize: 13,
+                fontWeight: 500,
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
               {status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}
@@ -169,17 +253,17 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
             type="number"
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
-            onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })}
-            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="0"
           />
-          <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
+          <span style={{ color: colors.muted, fontSize: 13 }}>to</span>
           <input
             type="number"
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
-            onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })}
-            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="10000"
           />
         </div>
@@ -191,7 +275,17 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {brands.map((brand) => (
             <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
-              <input type="checkbox" style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+              <input
+                type="checkbox"
+                checked={filters.brands.includes(brand)}
+                onChange={(e) => {
+                  const newBrands = e.target.checked
+                    ? [...filters.brands, brand]
+                    : filters.brands.filter((b) => b !== brand)
+                  onFilterChange({ brands: newBrands })
+                }}
+                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+              />
               <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
             </label>
           ))}
@@ -201,60 +295,152 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
   )
 }
 
-// 3. Toolbar
-function Toolbar({ filters, onFilterChange }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void }) {
+// 2b. Filter Drawer (mobile/tablet)
+function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, onClearAll }: {
+  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll: () => void
+}) {
+  const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
+  const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+
+  if (!isOpen) return null
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 48, padding: '8px 0' }}>
-      {/* Filters Button */}
-      <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
-        <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-        Filters
-        <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
-      </button>
+    <>
+      <style>{slideInRightKeyframes}</style>
+      <div onClick={onClose} role="presentation" aria-label="Close filters" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
+      <div role="dialog" aria-label="Filters" style={{
+        position: 'fixed', top: 0, right: 0, width: 300, height: '100vh', background: colors.canvas, zIndex: 201,
+        boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', animation: 'slideInRight 0.3s ease', display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>Filters</span>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {categories.slice(0, 8).map((cat) => (
+                <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={filters.categories.includes(cat.id)} onChange={(e) => {
+                    const newCats = e.target.checked ? [...filters.categories, cat.id] : filters.categories.filter((id) => id !== cat.id)
+                    onFilterChange({ categories: newCats })
+                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                  <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
+                <button key={status} onClick={() => onFilterChange({ status })} style={{
+                  padding: '10px 16px', borderRadius: rounded.pill, height: 44,
+                  border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
+                  background: filters.status === status ? colors.primary : colors.surfaceSoft,
+                  color: filters.status === status ? colors.onPrimary : colors.ink,
+                  fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>{status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
+              <span style={{ color: colors.muted, fontSize: 13 }}>to</span>
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
+            </div>
+          </div>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {brands.map((brand) => (
+                <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
+                    const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
+                    onFilterChange({ brands: newBrands })
+                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                  <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.hairlineSoft}`, display: 'flex', gap: 12 }}>
+          <button onClick={onClearAll} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
+          <button onClick={onClose} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 14, cursor: 'pointer', fontWeight: 600 }}>Apply</button>
+        </div>
+      </div>
+    </>
+  )
+}
 
-      {/* Clear All */}
-      <button style={{ border: 'none', background: 'none', color: colors.ink, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear all</button>
-
-      {/* Refresh */}
-      <button style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-      </button>
-
-      {/* Inline Search */}
-      <div style={{ flex: 1, position: 'relative' }}>
+// 3. Toolbar
+function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll, isDesktop }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; isDesktop?: boolean }) {
+  const searchWidth = isDesktop ? 300 : 180
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 24, height: 48, padding: '8px 0' }}>
+      {/* Search - responsive width */}
+      <div style={{ width: searchWidth, flex: '0 0 ' + searchWidth + 'px', position: 'relative' }}>
         <input
           type="text"
-          placeholder="Search by products"
+          placeholder="Search"
           value={filters.search}
           onChange={(e) => onFilterChange({ search: e.target.value })}
-          style={{ width: '100%', height: 38, padding: '0 12px 0 36px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, outline: 'none', color: colors.ink }}
+          style={{ width: '100%', height: 44, padding: '0 16px 0 44px', borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 13, outline: 'none', color: colors.ink, boxSizing: 'border-box' }}
         />
-        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: colors.muted, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
 
+      {/* Filter Button - ONLY show on tablet/mobile when sidebar is hidden */}
+      {showFiltersButton && (
+        <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+          <svg width={18} height={18} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          Filters
+          <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+        </button>
+      )}
+
       {/* Sort Dropdown */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130 }}>
-        <span style={{ color: colors.ink }}>Trending</span>
-        <span style={{ color: colors.steel }}>˅</span>
-      </div>
+      <select
+        value={filters.sortBy}
+        onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
+        style={{ padding: '8px 12px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0 }}
+      >
+        <option value="trending">Trending</option>
+        <option value="price_asc">Price: Low → High</option>
+        <option value="price_desc">Price: High → Low</option>
+        <option value="newest">Newest</option>
+      </select>
 
       {/* View Toggle */}
-      <div style={{ display: 'flex', gap: 0 }}>
+      <div style={{ display: 'flex', gap: 0, flexShrink: 0 }}>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_3' })}
-          style={{ width: 34, height: 34, borderRadius: '8px 0 0 8px', border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          title="4 columns"
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
         </button>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_2' })}
-          style={{ width: 34, height: 34, borderRadius: '0 8px 8px 0', border: `1px solid ${colors.hairline}`, borderLeft: 'none', background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          title="2 columns"
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
         </button>
       </div>
+
+      {/* Refresh - LAST position (least used action) */}
+      <button title="Refresh" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width={18} height={18} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
     </div>
   )
 }
@@ -264,8 +450,8 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
   return (
     <a
       href={`/store/products/${product.slug}`}
-      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'block' }}
-      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'block' }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
       {/* Image */}
@@ -273,33 +459,33 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
         {product.media[0] ? (
           <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
         ) : (
-          <svg width={48} height={48} fill={colors.steel} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
+          <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
         )}
         {/* Download icon */}
         <button style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(10,19,23,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width={14} height={14} fill={colors.steel} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+          <svg width={14} height={14} fill={colors.muted} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
         </button>
       </div>
 
       {/* Body */}
       <div style={{ padding: '10px 12px' }}>
         {/* Brand */}
-        {product.category && <span style={{ fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
+        {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
         
         {/* Name */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 2 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: colors.ink, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
-          <span style={{ color: colors.steel, fontSize: 16 }}>···</span>
+          <span style={{ color: colors.muted, fontSize: 16 }}>···</span>
         </div>
 
         {/* Price */}
-        <div style={{ fontSize: 12, color: colors.charcoal, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
+        <div style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
 
         {/* Stock badge */}
         {product.stock > 0 ? (
-          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.success, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
         ) : (
-          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.critical, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticDown, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
         )}
       </div>
     </a>
@@ -307,10 +493,14 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 }
 
 // 5. Product Grid
-function ProductGrid({ products, viewMode, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; onAddToCart: (p: Product) => void }) {
-  const cols = viewMode === 'grid_3' ? 5 : 3
+function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
+  const cols = (() => {
+    if (isMobile) return 1
+    if (isTablet) return 2
+    return viewMode === 'grid_3' ? 4 : 2
+  })()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
       ))}
@@ -337,15 +527,15 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+        style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
       >
-        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        <svg width={16} height={16} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
       </button>
       
       {start > 1 && (
         <>
-          <button onClick={() => onPageChange(1)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>1</button>
-          {start > 2 && <span style={{ color: colors.steel }}>...</span>}
+          <button onClick={() => onPageChange(1)} style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: 'transparent', color: colors.muted, cursor: 'pointer' }}>1</button>
+          {start > 2 && <span style={{ color: colors.muted }}>...</span>}
         </>
       )}
       
@@ -354,11 +544,12 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
           key={page}
           onClick={() => onPageChange(page)}
           style={{
-            padding: '8px 14px',
-            borderRadius: 8,
+            padding: '10px 16px',
+            borderRadius: rounded.pill,
+            height: 44,
             border: currentPage === page ? 'none' : `1px solid ${colors.hairline}`,
-            background: currentPage === page ? colors.inkDeep : colors.canvas,
-            color: currentPage === page ? colors.canvas : colors.charcoal,
+            background: currentPage === page ? colors.ink : colors.canvas,
+            color: currentPage === page ? colors.canvas : colors.muted,
             cursor: 'pointer',
             fontWeight: currentPage === page ? 600 : 400,
           }}
@@ -369,17 +560,17 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
       
       {end < totalPages && (
         <>
-          {end < totalPages - 1 && <span style={{ color: colors.steel }}>...</span>}
-          <button onClick={() => onPageChange(totalPages)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>{totalPages}</button>
+          {end < totalPages - 1 && <span style={{ color: colors.muted }}>...</span>}
+          <button onClick={() => onPageChange(totalPages)} style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: 'transparent', color: colors.muted, cursor: 'pointer' }}>{totalPages}</button>
         </>
       )}
       
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+        style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
       >
-        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <svg width={16} height={16} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
       </button>
     </div>
   )
@@ -392,51 +583,51 @@ function Footer() {
       <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
-          <p style={{ fontSize: 14, color: colors.steel, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+          <p style={{ fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <PhoneIcon size={16} color={colors.steel} />
-            <span style={{ fontSize: 14, color: colors.steel }}>+233 20 123 4567</span>
+<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <PhoneIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>+233 20 123 4567</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <MailIcon size={16} color={colors.steel} />
-            <span style={{ fontSize: 14, color: colors.steel }}>info@carthousegh.com</span>
+            <MailIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>info@carthousegh.com</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <LocationIcon size={16} color={colors.steel} />
-            <span style={{ fontSize: 14, color: colors.steel }}>Accra, Ghana</span>
+            <LocationIcon size={16} color={colors.muted} />
+            <span style={{ fontSize: 14, color: colors.muted }}>Accra, Ghana</span>
           </div>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {['About Us', 'Shop', 'Deals', 'Contact'].map((link) => (
-              <a key={link} href="#" style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link}</a>
+            {[{ label: 'About Us', href: '/about' }, { label: 'Shop', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'Contact', href: '/contact' }].map((link) => (
+              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: colors.muted, textDecoration: 'none' }}>{link.label}</Link>
             ))}
           </div>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
           <div style={{ display: 'flex', gap: 12 }}>
-            <a href="#" aria-label="Facebook" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
-              <FacebookIcon size={16} color={colors.steel} />
+<a href="#" aria-label="Facebook" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <FacebookIcon size={18} color={colors.muted} />
             </a>
-            <a href="#" aria-label="Instagram" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
-              <InstagramIcon size={16} color={colors.steel} />
+            <a href="#" aria-label="Instagram" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <InstagramIcon size={18} color={colors.muted} />
             </a>
-            <a href="#" aria-label="Twitter" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
-              <TwitterIcon size={16} color={colors.steel} />
+            <a href="#" aria-label="Twitter" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <TwitterIcon size={18} color={colors.muted} />
             </a>
-            <a href="#" aria-label="WhatsApp" style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel }}>
-              <WhatsAppIcon size={16} color={colors.steel} />
+            <a href="#" aria-label="WhatsApp" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+              <WhatsAppIcon size={18} color={colors.muted} />
             </a>
           </div>
         </div>
       </div>
       <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: colors.stone }}>© 2026 CartHouse GH. All rights reserved.</p>
+        <p style={{ fontSize: 12, color: colors.mutedSoft }}>© 2026 CartHouse GH. All rights reserved.</p>
       </div>
     </footer>
   )
@@ -447,7 +638,10 @@ function StorefrontPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { addItem } = useCart()
-  
+  const { isDesktop, isTablet, isMobile } = useResponsive()
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   
@@ -456,6 +650,7 @@ function StorefrontPage() {
     priceMin: parseInt(searchParams.get('priceMin') || '0'),
     priceMax: parseInt(searchParams.get('priceMax') || '10000'),
     categories: searchParams.get('categories')?.split(',').filter(Boolean) || [],
+    brands: searchParams.get('brands')?.split(',').filter(Boolean) || [],
     search: searchParams.get('search') || '',
     sortBy: (searchParams.get('sortBy') as FilterState['sortBy']) || 'trending',
     viewMode: (searchParams.get('viewMode') as FilterState['viewMode']) || 'grid_3',
@@ -475,6 +670,7 @@ function StorefrontPage() {
     if (filters.status === 'on_sale') result = result.filter((p) => p.isAvailable)
     result = result.filter((p) => p.price >= filters.priceMin && p.price <= filters.priceMax)
     if (filters.categories.length > 0) result = result.filter((p) => p.category && filters.categories.includes(p.category.id))
+    if (filters.brands.length > 0) result = result.filter((p) => p.supplier && filters.brands.includes(p.supplier.name))
     if (filters.search) result = result.filter((p) => p.name.toLowerCase().includes(filters.search.toLowerCase()))
     
     if (filters.sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
@@ -497,6 +693,7 @@ function StorefrontPage() {
     if (update.priceMin && update.priceMin > 0) params.set('priceMin', update.priceMin.toString())
     if (update.priceMax && update.priceMax < 10000) params.set('priceMax', update.priceMax.toString())
     if (update.categories?.length) params.set('categories', update.categories.join(','))
+    if (update.brands?.length) params.set('brands', update.brands.join(','))
     if (update.search) params.set('search', update.search)
     if (update.sortBy && update.sortBy !== 'trending') params.set('sortBy', update.sortBy)
     if (update.viewMode && update.viewMode !== 'grid_3') params.set('viewMode', update.viewMode)
@@ -525,17 +722,32 @@ function StorefrontPage() {
     })
   }
 
+  const handleClearAll = () => {
+    handleFilterChange({ status: 'all', priceMin: 0, priceMax: 10000, categories: [], brands: [], search: '' })
+  }
+
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
-      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
-      
+      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} onMenuToggle={() => setIsMobileMenuOpen(true)} isMobile={isMobile} />
+
+      <MobileMenuDrawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+      <FilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        onClearAll={handleClearAll}
+      />
+
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
-          <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />
-          
+          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} onClearAll={handleClearAll} />}
+
           <div style={{ flex: 1 }}>
-            <Toolbar filters={filters} onFilterChange={handleFilterChange} />
-            <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} isDesktop={isDesktop} />
+            <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} isDesktop={isDesktop} isTablet={isTablet} isMobile={isMobile} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
         </div>

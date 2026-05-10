@@ -3,23 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart, CartItem } from '@/lib/cart'
-
-const colors = {
-  canvas: '#ffffff',
-  surfaceSoft: '#f1f4f7',
-  inkDeep: '#0a1317',
-  ink: '#1c1e21',
-  charcoal: '#444950',
-  steel: '#5d6c7b',
-  stone: '#8595a4',
-  hairline: '#ced0d4',
-  hairlineSoft: '#dee3e9',
-  primary: '#0064e0',
-  onPrimary: '#ffffff',
-  success: '#31a24c',
-  warning: '#f2a918',
-  critical: '#e41e3f',
-}
+import { colors, rounded, inputStyle } from '@/lib/design-system'
 
 interface CustomerInfo {
   name: string
@@ -46,7 +30,7 @@ function Navbar() {
             <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>CartHouse GH</span>
           </a>
         </div>
-        <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <button onClick={() => setIsOpen(true)} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
@@ -71,19 +55,21 @@ function FormField({ label, name, value, onChange, type = 'text', placeholder, r
 }) {
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: '12px 14px',
-    borderRadius: 8,
+    height: 44,
+    padding: '0 14px',
+    borderRadius: 100,
     border: `1px solid ${colors.hairline}`,
     fontSize: 14,
     outline: 'none',
     background: colors.canvas,
     color: colors.ink,
+    boxSizing: 'border-box',
   }
   
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: colors.ink, marginBottom: 6 }}>
-        {label} {required && <span style={{ color: colors.critical }}>*</span>}
+        {label} {required && <span style={{ color: colors.semanticDown }}>*</span>}
       </label>
       {textarea ? (
         <textarea
@@ -93,7 +79,7 @@ function FormField({ label, name, value, onChange, type = 'text', placeholder, r
           placeholder={placeholder}
           required={required}
           rows={3}
-          style={{ ...inputStyle, resize: 'vertical' }}
+          style={{ ...inputStyle, resize: 'vertical', padding: '12px 14px', height: 'auto' }}
         />
       ) : (
         <input
@@ -112,13 +98,13 @@ function FormField({ label, name, value, onChange, type = 'text', placeholder, r
 
 function CartSummary({ items, total }: { items: CartItem[]; total: number }) {
   return (
-    <div style={{ background: colors.surfaceSoft, borderRadius: 12, padding: 24 }}>
+    <div style={{ background: colors.surfaceSoft, borderRadius: rounded.xl, padding: 24 }}>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: colors.ink, marginBottom: 16 }}>Order Summary</h3>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, maxHeight: 300, overflow: 'auto' }}>
         {items.map((item) => (
-          <div key={item.id} style={{ display: 'flex', gap: 12, padding: 8, background: colors.canvas, borderRadius: 8 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 6, background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+          <div key={item.id} style={{ display: 'flex', gap: 12, padding: 12, background: colors.canvas, borderRadius: rounded.lg }}>
+            <div style={{ width: 56, height: 56, borderRadius: rounded.md, background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
               {item.image ? (
                 <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -127,8 +113,8 @@ function CartSummary({ items, total }: { items: CartItem[]; total: number }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: colors.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-              {item.variant && <div style={{ fontSize: 11, color: colors.steel }}>{item.variant}</div>}
-              <div style={{ fontSize: 12, color: colors.charcoal }}>Qty: {item.quantity}</div>
+              {item.variant && <div style={{ fontSize: 11, color: colors.muted }}>{item.variant}</div>}
+              <div style={{ fontSize: 12, color: colors.muted }}>Qty: {item.quantity}</div>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: colors.ink }}>GH₵{(item.price * item.quantity).toFixed(2)}</div>
           </div>
@@ -136,8 +122,8 @@ function CartSummary({ items, total }: { items: CartItem[]; total: number }) {
       </div>
       
       <div style={{ borderTop: `1px solid ${colors.hairline}`, paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 14, color: colors.charcoal }}>Total</span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: colors.inkDeep }}>GH₵{total.toFixed(2)}</span>
+        <span style={{ fontSize: 14, color: colors.muted }}>Total</span>
+        <span style={{ fontSize: 24, fontWeight: 700, color: colors.ink }}>GH₵{total.toFixed(2)}</span>
       </div>
     </div>
   )
@@ -224,13 +210,13 @@ export default function CheckoutPage() {
       <Navbar />
       
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.inkDeep, marginBottom: 32 }}>Checkout</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.ink, marginBottom: 32 }}>Checkout</h1>
         
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 32 }}>
             <div>
               {error && (
-                <div style={{ padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: colors.critical, marginBottom: 24 }}>
+                <div style={{ padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: rounded.lg, color: colors.semanticDown, marginBottom: 24 }}>
                   {error}
                 </div>
               )}
@@ -317,7 +303,7 @@ export default function CheckoutPage() {
                         alignItems: 'center',
                         gap: 12,
                         padding: 16,
-                        borderRadius: 8,
+                        borderRadius: rounded.lg,
                         border: `1px solid ${paymentMethod === option.value ? colors.primary : colors.hairline}`,
                         background: paymentMethod === option.value ? '#f0f7ff' : colors.canvas,
                         cursor: 'pointer',
@@ -333,7 +319,7 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>{option.label}</div>
-                        <div style={{ fontSize: 12, color: colors.steel }}>{option.desc}</div>
+                        <div style={{ fontSize: 12, color: colors.muted }}>{option.desc}</div>
                       </div>
                     </label>
                   ))}
@@ -351,7 +337,7 @@ export default function CheckoutPage() {
                   width: '100%',
                   marginTop: 16,
                   height: 52,
-                  borderRadius: 8,
+                  borderRadius: rounded.pill,
                   border: 'none',
                   background: loading ? colors.hairline : colors.primary,
                   color: colors.onPrimary,
@@ -369,7 +355,7 @@ export default function CheckoutPage() {
       
       <footer style={{ background: colors.canvas, borderTop: `1px solid ${colors.hairlineSoft}`, padding: '48px 24px', marginTop: 64 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: colors.stone }}>© 2026 CartHouse GH. All rights reserved.</p>
+          <p style={{ fontSize: 12, color: colors.mutedSoft }}>© 2026 CartHouse GH. All rights reserved.</p>
         </div>
       </footer>
     </div>
