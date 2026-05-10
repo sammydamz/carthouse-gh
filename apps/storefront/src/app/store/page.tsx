@@ -61,37 +61,112 @@ const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus'
 
 // --- Components ---
 
+// 1. Mobile Menu Drawer
+function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 200,
+        }}
+      />
+      {/* Drawer */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: 280,
+        height: '100vh',
+        background: colors.canvas,
+        zIndex: 201,
+        boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+        animation: 'slideIn 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <style>{`@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
+            <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>Menu</span>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {/* Links */}
+        <nav style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {['Explore', 'Deals', 'About Us', 'Contact'].map((link) => (
+            <a key={link} href="#" style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link}</a>
+          ))}
+        </nav>
+      </div>
+    </>
+  )
+}
+
 // 1. Navbar
-function Navbar({ search, onSearchChange }: { search: string; onSearchChange: (v: string) => void }) {
+function Navbar({ search, onSearchChange, onMenuToggle }: { search: string; onSearchChange: (v: string) => void; onMenuToggle?: () => void }) {
   const { itemCount, setIsOpen } = useCart()
-  
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkWidth = () => setIsMobile(window.innerWidth < 768)
+    checkWidth()
+    window.addEventListener('resize', checkWidth)
+    return () => window.removeEventListener('resize', checkWidth)
+  }, [])
+
   return (
     <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Logo */}
+        {/* Left: Logo + Hamburger (mobile) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {isMobile && onMenuToggle && (
+            <button onClick={onMenuToggle} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width={22} height={22} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
           <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
           <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>CartHouse GH</span>
         </div>
 
-        {/* Search */}
-        <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
-          />
-          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+        {/* Search (hidden on mobile) */}
+        {!isMobile && (
+          <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
+            />
+            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        )}
 
-        {/* Nav Links & Cart */}
+        {/* Nav Links & Cart (desktop) / Cart only (mobile) */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
-          <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
+          {!isMobile && (
+            <>
+              <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
+              <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
+            </>
+          )}
           <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -429,6 +504,7 @@ function StorefrontPage() {
   const searchParams = useSearchParams()
   const { addItem } = useCart()
   
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   
@@ -508,7 +584,9 @@ function StorefrontPage() {
 
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
-      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
+      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} onMenuToggle={() => setIsMobileMenuOpen(true)} />
+      
+      <MobileMenuDrawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
