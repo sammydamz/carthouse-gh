@@ -315,16 +315,21 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 24, height: 48, padding: '8px 0' }}>
 {/* Sort Dropdown */}
-      <select
-        value={filters.sortBy}
-        onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
-        style={{ padding: '8px 36px 8px 16px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0 }}
-      >
-        <option value="trending">Trending</option>
-        <option value="price_asc">Price: Low → High</option>
-        <option value="price_desc">Price: High → Low</option>
-        <option value="newest">Newest</option>
-      </select>
+      <div style={{ position: 'relative' }}>
+        <select
+          value={filters.sortBy}
+          onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
+          style={{ padding: '8px 36px 8px 12px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0, appearance: 'none' }}
+        >
+          <option value="trending">Trending</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="price_desc">Price: High → Low</option>
+          <option value="newest">Newest</option>
+        </select>
+        <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: colors.muted, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9l6 6 6-6" />
+        </svg>
+</div>
 
       {/* View Toggle */}
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
