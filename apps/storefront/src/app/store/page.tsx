@@ -63,6 +63,28 @@ const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus'
 
 // --- CSS Constants ---
 const slideInKeyframes = `@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`
+const slideInRightKeyframes = `@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }`
+
+// --- Responsive Hook ---
+function useResponsive() {
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkWidth = () => {
+      const w = window.innerWidth
+      setIsDesktop(w >= 1200)
+      setIsTablet(w >= 768 && w < 1200)
+      setIsMobile(w < 768)
+    }
+    checkWidth()
+    window.addEventListener('resize', checkWidth)
+    return () => window.removeEventListener('resize', checkWidth)
+  }, [])
+
+  return { isDesktop, isTablet, isMobile }
+}
 
 // --- Components ---
 
@@ -295,16 +317,106 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
   )
 }
 
+// 2b. Filter Drawer (mobile/tablet)
+function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, onClearAll }: {
+  isOpen: boolean; onClose: () => void; filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[]; onClearAll: () => void
+}) {
+  const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
+  const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <style>{slideInRightKeyframes}</style>
+      <div onClick={onClose} role="presentation" aria-label="Close filters" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
+      <div role="dialog" aria-label="Filters" style={{
+        position: 'fixed', top: 0, right: 0, width: 300, height: '100vh', background: colors.canvas, zIndex: 201,
+        boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', animation: 'slideInRight 0.3s ease', display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>Filters</span>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {categories.slice(0, 8).map((cat) => (
+                <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={filters.categories.includes(cat.id)} onChange={(e) => {
+                    const newCats = e.target.checked ? [...filters.categories, cat.id] : filters.categories.filter((id) => id !== cat.id)
+                    onFilterChange({ categories: newCats })
+                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                  <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
+                <button key={status} onClick={() => onFilterChange({ status })} style={{
+                  padding: '6px 16px', borderRadius: 20,
+                  border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
+                  background: filters.status === status ? colors.inkDeep : colors.canvas,
+                  color: filters.status === status ? colors.canvas : colors.charcoal,
+                  fontSize: 13, cursor: 'pointer',
+                }}>{status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
+              <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
+            </div>
+          </div>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {brands.map((brand) => (
+                <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={filters.brands.includes(brand)} onChange={(e) => {
+                    const newBrands = e.target.checked ? [...filters.brands, brand] : filters.brands.filter((b) => b !== brand)
+                    onFilterChange({ brands: newBrands })
+                  }} style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+                  <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.hairlineSoft}`, display: 'flex', gap: 12 }}>
+          <button onClick={onClearAll} style={{ flex: 1, padding: '12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
+          <button onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 14, cursor: 'pointer', fontWeight: 600 }}>Apply</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // 3. Toolbar
-function Toolbar({ filters, onFilterChange }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void }) {
+function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 48, padding: '8px 0' }}>
-      {/* Filters Button */}
-      <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
-        <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-        Filters
-        <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
-      </button>
+      {showFiltersButton ? (
+        <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+          <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          Filters
+        </button>
+      ) : (
+        <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+          <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Filters
+          <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+        </button>
+      )}
 
       {/* Clear All */}
       <button style={{ border: 'none', background: 'none', color: colors.ink, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear all</button>
@@ -523,8 +635,10 @@ function StorefrontPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { addItem } = useCart()
-  
+  const { isDesktop } = useResponsive()
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   
@@ -605,18 +719,31 @@ function StorefrontPage() {
     })
   }
 
+  const handleClearAll = () => {
+    handleFilterChange({ status: 'all', priceMin: 0, priceMax: 10000, categories: [], brands: [], search: '' })
+  }
+
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
       <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} onMenuToggle={() => setIsMobileMenuOpen(true)} />
-      
+
       <MobileMenuDrawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      
+
+      <FilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        onClearAll={handleClearAll}
+      />
+
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
         <div style={{ display: 'flex' }}>
-          <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />
-          
+          {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />}
+
           <div style={{ flex: 1 }}>
-            <Toolbar filters={filters} onFilterChange={handleFilterChange} />
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} />
             <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
