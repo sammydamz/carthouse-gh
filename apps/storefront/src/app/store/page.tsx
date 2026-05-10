@@ -8,6 +8,10 @@ import { colors, rounded } from '@/lib/design-system'
 import { PhoneIcon, MailIcon, LocationIcon, FacebookIcon, InstagramIcon, TwitterIcon, WhatsAppIcon } from '@/components/FooterIcons'
 
 interface Category {
+  id: string
+  name: string
+}
+
 interface Product {
   id: string
   name: string
