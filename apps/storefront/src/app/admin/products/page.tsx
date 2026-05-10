@@ -30,6 +30,7 @@ interface Product {
   condition: string | null
   stock: number
   isAvailable: boolean
+  isDeleted: boolean
   media: string[]
   videoUrl: string | null
   categoryId: string | null

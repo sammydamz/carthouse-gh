@@ -9,7 +9,6 @@ export async function GET() {
         category: true,
         supplier: true,
         variants: true,
-        _count: { select: { orderItems: true } },
       },
       orderBy: { createdAt: 'desc' },
     })

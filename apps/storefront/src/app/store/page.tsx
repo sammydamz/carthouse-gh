@@ -1,0 +1,422 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+
+// Meta Design System Colors
+const colors = {
+  canvas: '#ffffff',
+  surfaceSoft: '#f1f4f7',
+  inkDeep: '#0a1317',
+  ink: '#1c1e21',
+  charcoal: '#444950',
+  slate: '#4b4c4f',
+  steel: '#5d6c7b',
+  stone: '#8595a4',
+  hairline: '#ced0d4',
+  hairlineSoft: '#dee3e9',
+  primary: '#0064e0',
+  onPrimary: '#ffffff',
+  success: '#31a24c',
+  warning: '#f2a918',
+  critical: '#e41e3f',
+}
+
+// --- Types ---
+interface Category {
+  id: string
+  name: string
+  slug: string
+  parentId: string | null
+  imageUrl: string | null
+}
+
+interface Product {
+  id: string
+  name: string
+  slug: string
+  price: number
+  stock: number
+  media: string[]
+  isAvailable: boolean
+  category: Category | null
+  supplier: { name: string } | null
+}
+
+type FilterState = {
+  status: 'all' | 'in_stock' | 'on_sale'
+  priceMin: number
+  priceMax: number
+  categories: string[]
+  search: string
+  sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
+  viewMode: 'grid_3' | 'grid_2'
+}
+
+// --- Mock Data ---
+const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus']
+
+// --- Components ---
+
+// 1. Navbar
+function Navbar({ cartCount, search, onSearchChange }: { cartCount: number; search: string; onSearchChange: (v: string) => void }) {
+  return (
+    <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
+          <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>CartHouse GH</span>
+        </div>
+
+        {/* Search */}
+        <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
+          />
+          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        {/* Nav Links & Cart */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
+          <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
+          <button style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {cartCount > 0 && (
+              <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cartCount}</span>
+            )}
+          </button>
+        </nav>
+      </div>
+    </header>
+  )
+}
+
+// 2. Sidebar Filter Panel
+function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[] }) {
+  const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
+  const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+
+  return (
+    <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
+      {/* Category Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {categories.slice(0, 8).map((cat) => (
+            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={filters.categories.includes(cat.id)}
+                onChange={(e) => {
+                  const newCats = e.target.checked
+                    ? [...filters.categories, cat.id]
+                    : filters.categories.filter((id) => id !== cat.id)
+                  onFilterChange({ categories: newCats })
+                }}
+                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+              />
+              <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Status Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => onFilterChange({ status })}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 20,
+                border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
+                background: filters.status === status ? colors.inkDeep : colors.canvas,
+                color: filters.status === status ? colors.canvas : colors.charcoal,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              {status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="number"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })}
+            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="0"
+          />
+          <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
+          <input
+            type="number"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })}
+            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="10000"
+          />
+        </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {brands.map((brand) => (
+            <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+              <input type="checkbox" style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+              <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+// 3. Toolbar
+function Toolbar({ filters, onFilterChange }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 48, padding: '8px 0' }}>
+      {/* Filters Button */}
+      <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+        <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Filters
+        <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+      </button>
+
+      {/* Clear All */}
+      <button style={{ border: 'none', background: 'none', color: colors.ink, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear all</button>
+
+      {/* Refresh */}
+      <button style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
+
+      {/* Inline Search */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search by products"
+          value={filters.search}
+          onChange={(e) => onFilterChange({ search: e.target.value })}
+          style={{ width: '100%', height: 38, padding: '0 12px 0 36px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, outline: 'none', color: colors.ink }}
+        />
+        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* Sort Dropdown */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130 }}>
+        <span style={{ color: colors.ink }}>Trending</span>
+        <span style={{ color: colors.steel }}>˅</span>
+      </div>
+
+      {/* View Toggle */}
+      <div style={{ display: 'flex', gap: 0 }}>
+        <button
+          onClick={() => onFilterChange({ viewMode: 'grid_3' })}
+          style={{ width: 34, height: 34, borderRadius: '8px 0 0 8px', border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+        </button>
+        <button
+          onClick={() => onFilterChange({ viewMode: 'grid_2' })}
+          style={{ width: 34, height: 34, borderRadius: '0 8px 8px 0', border: `1px solid ${colors.hairline}`, borderLeft: 'none', background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// 4. Product Card
+function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
+  return (
+    <div
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s' }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
+      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
+    >
+      {/* Image */}
+      <div style={{ aspectRatio: '1/1', background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {product.media[0] ? (
+          <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
+        ) : (
+          <svg width={48} height={48} fill={colors.steel} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
+        )}
+        {/* Download icon */}
+        <button style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(10,19,23,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width={14} height={14} fill={colors.steel} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '10px 12px' }}>
+        {/* Brand */}
+        {product.category && <span style={{ fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
+        
+        {/* Name */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: colors.ink, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
+          <span style={{ color: colors.steel, fontSize: 16 }}>···</span>
+        </div>
+
+        {/* Price */}
+        <div style={{ fontSize: 12, color: colors.charcoal, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
+
+        {/* Stock badge */}
+        {product.stock > 0 ? (
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.success, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+        ) : (
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.critical, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// 5. Product Grid
+function ProductGrid({ products, viewMode, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; onAddToCart: (p: Product) => void }) {
+  const cols = viewMode === 'grid_3' ? 5 : 3
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
+      ))}
+    </div>
+  )
+}
+
+// 6. Footer
+function Footer() {
+  return (
+    <footer style={{ background: colors.canvas, borderTop: `1px solid ${colors.hairlineSoft}`, padding: '64px 24px' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
+          <p style={{ fontSize: 14, color: colors.steel, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
+          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📞 +233 20 123 4567</p>
+          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📧 info@carthousegh.com</p>
+          <p style={{ fontSize: 14, color: colors.steel }}>📍 Accra, Ghana</p>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {['About Us', 'Shop', 'Deals', 'Contact'].map((link) => (
+              <a key={link} href="#" style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link}</a>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {['FB', 'IG', 'X', 'WA'].map((social) => (
+              <span key={social} style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel, fontSize: 12 }}>{social}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: colors.stone }}>© 2026 CartHouse GH. All rights reserved.</p>
+      </div>
+    </footer>
+  )
+}
+
+// --- Main Page ---
+export default function StorefrontPage() {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [cartCount, setCartCount] = useState(0)
+  const [filters, setFilters] = useState<FilterState>({
+    status: 'all',
+    priceMin: 0,
+    priceMax: 10000,
+    categories: [],
+    search: '',
+    sortBy: 'trending',
+    viewMode: 'grid_3',
+  })
+
+  useEffect(() => {
+    fetch('/api/public/categories').then((r) => r.json()).then((d) => setCategories(d)).catch(console.error)
+    fetch('/api/public/products?limit=50').then((r) => r.json()).then((d) => setProducts(d)).catch(console.error)
+  }, [])
+
+  const filteredProducts = useMemo(() => {
+    let result = [...products]
+    
+    // Filter by availability based on status
+    if (filters.status === 'in_stock') result = result.filter((p) => p.stock > 0)
+    if (filters.status === 'on_sale') result = result.filter((p) => p.isAvailable)
+    
+    // Filter by price
+    result = result.filter((p) => p.price >= filters.priceMin && p.price <= filters.priceMax)
+    
+    // Filter by category
+    if (filters.categories.length > 0) result = result.filter((p) => p.category && filters.categories.includes(p.category.id))
+    
+    // Filter by search
+    if (filters.search) result = result.filter((p) => p.name.toLowerCase().includes(filters.search.toLowerCase()))
+    
+    // Sort
+    if (filters.sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
+    if (filters.sortBy === 'price_desc') result.sort((a, b) => b.price - a.price)
+    if (filters.sortBy === 'newest') result.sort((a, b) => 0) // Would need createdAt
+    
+    return result
+  }, [products, filters])
+
+  const handleFilterChange = (update: Partial<FilterState>) => {
+    setFilters((prev) => ({ ...prev, ...update }))
+  }
+
+  const handleAddToCart = () => {
+    setCartCount((prev) => prev + 1)
+  }
+
+  return (
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
+      <Navbar cartCount={cartCount} search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
+      
+      <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
+        <div style={{ display: 'flex' }}>
+          <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />
+          
+          <div style={{ flex: 1 }}>
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} />
+            <ProductGrid products={filteredProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
