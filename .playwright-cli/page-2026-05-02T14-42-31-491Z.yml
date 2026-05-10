@@ -1,0 +1,190 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - link "EA First Class Autos" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]: EA First Class Autos
+        - navigation "Main" [ref=e7]:
+          - list [ref=e9]:
+            - listitem [ref=e10]:
+              - link "Cars" [ref=e11] [cursor=pointer]:
+                - /url: /cars
+                - generic [ref=e12]: Cars
+            - listitem [ref=e13]:
+              - link "About" [ref=e14] [cursor=pointer]:
+                - /url: /about
+                - generic [ref=e15]: About
+            - listitem [ref=e16]:
+              - link "Contact" [ref=e17] [cursor=pointer]:
+                - /url: /contact
+                - generic [ref=e18]: Contact
+      - button [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+  - generic [ref=e24]:
+    - generic [ref=e26]:
+      - heading "EA First Class Autos" [level=1] [ref=e27]
+      - paragraph [ref=e28]: Premium vehicles at competitive prices
+    - separator [ref=e29]
+    - generic [ref=e30]:
+      - heading "Our Cars" [level=2] [ref=e31]
+      - paragraph [ref=e32]: Browse our selection of quality vehicles.
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - link "Toyota Camry 2022" [ref=e35] [cursor=pointer]:
+          - /url: /cars/toyota-camry-2022
+          - img "Toyota Camry 2022" [ref=e38]
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]: Toyota
+            - generic [ref=e42]: Used
+          - link "Toyota Camry 2022" [ref=e43] [cursor=pointer]:
+            - /url: /cars/toyota-camry-2022
+            - heading "Toyota Camry 2022" [level=3] [ref=e44]
+          - paragraph [ref=e45]: "2022"
+        - generic [ref=e46]:
+          - generic [ref=e47]: $25,000Negotiable
+          - link "Contact" [ref=e48] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20Toyota%20Camry%202022%20listed%20at%20%2425%2C000
+            - img [ref=e49]
+            - text: Contact
+      - generic [ref=e51]:
+        - link "BMW X5 2023" [ref=e52] [cursor=pointer]:
+          - /url: /cars/bmw-x5-2023
+          - img "BMW X5 2023" [ref=e55]
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - generic [ref=e58]: BMW
+            - generic [ref=e59]: New
+          - link "BMW X5 2023" [ref=e60] [cursor=pointer]:
+            - /url: /cars/bmw-x5-2023
+            - heading "BMW X5 2023" [level=3] [ref=e61]
+          - paragraph [ref=e62]: "2023"
+        - generic [ref=e63]:
+          - generic [ref=e64]: $55,000
+          - link "Contact" [ref=e65] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20BMW%20X5%202023%20listed%20at%20%2455%2C000
+            - img [ref=e66]
+            - text: Contact
+      - generic [ref=e68]:
+        - link "Honda Civic 2021" [ref=e69] [cursor=pointer]:
+          - /url: /cars/honda-civic-2021
+          - img "Honda Civic 2021" [ref=e72]
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: Honda
+            - generic [ref=e76]: Used
+          - link "Honda Civic 2021" [ref=e77] [cursor=pointer]:
+            - /url: /cars/honda-civic-2021
+            - heading "Honda Civic 2021" [level=3] [ref=e78]
+          - paragraph [ref=e79]: "2021"
+        - generic [ref=e80]:
+          - generic [ref=e81]: $18,000Negotiable
+          - link "Contact" [ref=e82] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20Honda%20Civic%202021%20listed%20at%20%2418%2C000
+            - img [ref=e83]
+            - text: Contact
+      - generic [ref=e85]:
+        - link "Mercedes-Benz C-Class 2023" [ref=e86] [cursor=pointer]:
+          - /url: /cars/mercedes-c-class-2023
+          - img "Mercedes-Benz C-Class 2023" [ref=e89]
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: Mercedes-Benz
+            - generic [ref=e93]: New
+          - link "Mercedes-Benz C-Class 2023" [ref=e94] [cursor=pointer]:
+            - /url: /cars/mercedes-c-class-2023
+            - heading "Mercedes-Benz C-Class 2023" [level=3] [ref=e95]
+          - paragraph [ref=e96]: "2023"
+        - generic [ref=e97]:
+          - generic [ref=e98]: $48,000
+          - link "Contact" [ref=e99] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20Mercedes-Benz%20C-Class%202023%20listed%20at%20%2448%2C000
+            - img [ref=e100]
+            - text: Contact
+      - generic [ref=e102]:
+        - link "Ford F-150 2022" [ref=e103] [cursor=pointer]:
+          - /url: /cars/ford-f150-2022
+          - img "Ford F-150 2022" [ref=e106]
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e109]: Ford
+            - generic [ref=e110]: Used
+          - link "Ford F-150 2022" [ref=e111] [cursor=pointer]:
+            - /url: /cars/ford-f150-2022
+            - heading "Ford F-150 2022" [level=3] [ref=e112]
+          - paragraph [ref=e113]: "2022"
+        - generic [ref=e114]:
+          - generic [ref=e115]: $35,000Negotiable
+          - link "Contact" [ref=e116] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20Ford%20F-150%202022%20listed%20at%20%2435%2C000
+            - img [ref=e117]
+            - text: Contact
+      - generic [ref=e119]:
+        - link "Toyota RAV4 2023" [ref=e120] [cursor=pointer]:
+          - /url: /cars/toyota-rav4-2023
+          - img "Toyota RAV4 2023" [ref=e123]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic [ref=e126]: Toyota
+            - generic [ref=e127]: New
+          - link "Toyota RAV4 2023" [ref=e128] [cursor=pointer]:
+            - /url: /cars/toyota-rav4-2023
+            - heading "Toyota RAV4 2023" [level=3] [ref=e129]
+          - paragraph [ref=e130]: "2023"
+        - generic [ref=e131]:
+          - generic [ref=e132]: $32,000Negotiable
+          - link "Contact" [ref=e133] [cursor=pointer]:
+            - /url: https://wa.me/?text=Hi%2C%20I'm%20interested%20in%20the%20Toyota%20RAV4%202023%20listed%20at%20%2432%2C000
+            - img [ref=e134]
+            - text: Contact
+  - contentinfo [ref=e136]:
+    - separator [ref=e137]
+    - generic [ref=e138]:
+      - generic [ref=e140]:
+        - heading "EA First Class Autos" [level=2] [ref=e141]
+        - generic [ref=e142]: © 2026 EA First Class Autos. All Rights Reserved.
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - heading "QUICK LINKS" [level=2] [ref=e145]
+          - list [ref=e146]:
+            - listitem [ref=e147]:
+              - link "Cars" [ref=e148] [cursor=pointer]:
+                - /url: /cars
+            - listitem [ref=e149]:
+              - link "About" [ref=e150] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e151]:
+              - link "Contact" [ref=e152] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e153]:
+          - heading "CONTACT" [level=2] [ref=e154]
+          - list [ref=e155]:
+            - listitem [ref=e156]:
+              - link "Phone" [ref=e157] [cursor=pointer]:
+                - /url: tel:+1234567890
+            - listitem [ref=e158]:
+              - link "Email" [ref=e159] [cursor=pointer]:
+                - /url: mailto:info@eafirstclassautos.com
+            - listitem [ref=e160]:
+              - link "WhatsApp" [ref=e161] [cursor=pointer]:
+                - /url: https://wa.me/1234567890
+    - separator [ref=e162]
+    - generic [ref=e163]:
+      - link "WhatsApp" [ref=e164] [cursor=pointer]:
+        - /url: https://wa.me/1234567890
+        - img [ref=e165]
+        - generic [ref=e167]: WhatsApp
+      - link "Email" [ref=e168] [cursor=pointer]:
+        - /url: mailto:info@eafirstclassautos.com
+        - img [ref=e169]
+        - generic [ref=e172]: Email
+      - link "Instagram page" [ref=e173] [cursor=pointer]:
+        - /url: https://instagram.com/
+        - img [ref=e174]
+        - generic [ref=e177]: Instagram page
+  - link "Message us on WhatsApp" [ref=e178] [cursor=pointer]:
+    - /url: https://wa.me/1234567890?text=Hi%2C%20I'm%20interested%20in%20your%20cars.%20What%20do%20you%20have%20available%3F
+    - img [ref=e179]
+  - button "Open Next.js Dev Tools" [ref=e186] [cursor=pointer]:
+    - img [ref=e187]
