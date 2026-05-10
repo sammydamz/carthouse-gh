@@ -209,7 +209,6 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
   }
 
   const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
-  const standaloneCategories = categories.filter((c) => !c.children || c.children.length === 0)
 
   return (
     <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
@@ -259,21 +258,6 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
                   </div>
                 )}
               </div>
-            )
-          })}
-          {standaloneCategories.map((cat) => {
-            const selected = filters.categories.includes(cat.id)
-            return (
-              <button
-                key={cat.id}
-                onClick={() => toggleCategory(cat.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: selected ? 700 : 400, color: selected ? colors.primary : colors.ink,
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: selected ? colors.primary : 'transparent', flexShrink: 0 }} />
-                {cat.name}
-              </button>
             )
           })}
         </div>
@@ -387,7 +371,6 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
   }
 
   const parentCategories = categories.filter((c) => c.children && c.children.length > 0)
-  const standaloneCategories = categories.filter((c) => !c.children || c.children.length === 0)
 
   if (!isOpen) return null
 
@@ -451,21 +434,6 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
                       </div>
                     )}
                   </div>
-                )
-              })}
-              {standaloneCategories.map((cat) => {
-                const selected = filters.categories.includes(cat.id)
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => toggleCategory(cat.id)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 36, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '0 4px', fontSize: 14, fontWeight: selected ? 700 : 400, color: selected ? colors.primary : colors.ink,
-                    }}
-                  >
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: selected ? colors.primary : 'transparent', flexShrink: 0 }} />
-                    {cat.name}
-                  </button>
                 )
               })}
             </div>
