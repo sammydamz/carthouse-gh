@@ -598,7 +598,7 @@ function ProductCardHorizontal({ product, isMobile }: { product: Product; isMobi
   return (
     <a
       href={`/store/products/${product.slug}`}
-      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'flex', maxWidth: isMobile ? '100%' : 500 }}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'flex', maxWidth: isMobile ? '100%' : 550 }}
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
