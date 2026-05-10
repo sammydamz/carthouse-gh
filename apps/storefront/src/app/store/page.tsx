@@ -596,7 +596,7 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 }
 
 // 4b. Product Card (Horizontal / List View)
-function ProductCardHorizontal({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
+function ProductCardHorizontal({ product }: { product: Product }) {
   return (
     <a
       href={`/store/products/${product.slug}`}
@@ -604,32 +604,24 @@ function ProductCardHorizontal({ product, onAddToCart }: { product: Product; onA
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
-      <div style={{ width: 200, height: 200, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
+      <div style={{ width: 140, height: 140, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
         {product.media[0] ? (
           <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
         )}
       </div>
-      <div style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
-        <span style={{ fontSize: 15, fontWeight: 600, color: colors.ink }}>{product.name}</span>
-        {product.description && <span style={{ fontSize: 13, color: colors.charcoal, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.description}</span>}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 'auto' }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
-          {product.condition && <span style={{ fontSize: 12, color: colors.muted }}>{product.condition}</span>}
+        <span style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>{product.name}</span>
+        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
           {product.stock > 0 ? (
-            <span style={{ padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+            <span style={{ padding: '1px 6px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
           ) : (
-            <span style={{ padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticDown, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+            <span style={{ padding: '1px 6px', borderRadius: rounded.pill, background: colors.semanticDown, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
           )}
         </div>
-        <button
-          onClick={(e) => { e.preventDefault(); onAddToCart() }}
-          style={{ alignSelf: 'flex-start', marginTop: 4, padding: '8px 24px', borderRadius: rounded.pill, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-        >
-          Add to Cart
-        </button>
       </div>
     </a>
   )
@@ -641,7 +633,7 @@ function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddT
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {products.map((product) => (
-          <ProductCardHorizontal key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
+          <ProductCardHorizontal key={product.id} product={product} />
         ))}
       </div>
     )
