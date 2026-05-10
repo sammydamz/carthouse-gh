@@ -10,6 +10,7 @@ export async function GET(request: Request) {
 
     const where: Record<string, unknown> = {
       isDeleted: false,
+      isAvailable: true,
     }
 
     if (categoryId) {

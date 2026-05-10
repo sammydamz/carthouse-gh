@@ -9,7 +9,7 @@ export async function GET(
     const { slug } = await params
 
     const product = await prisma.product.findUnique({
-      where: { slug, isDeleted: false },
+      where: { slug, isDeleted: false, isAvailable: true },
       include: {
         category: { select: { id: true, name: true, slug: true } },
         supplier: { select: { id: true, name: true } },
