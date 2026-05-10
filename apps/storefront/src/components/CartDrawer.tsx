@@ -1,6 +1,7 @@
 'use client'
 
 import { useCart } from '@/lib/cart'
+import Link from 'next/link'
 
 const colors = {
   canvas: '#ffffff',
@@ -182,8 +183,13 @@ export function CartDrawer() {
               <span style={{ fontSize: 14, color: colors.charcoal }}>Subtotal</span>
               <span style={{ fontSize: 20, fontWeight: 700, color: colors.inkDeep }}>GH₵{total.toFixed(2)}</span>
             </div>
-            <button
+            <Link
+              href="/store/checkout"
+              onClick={() => setIsOpen(false)}
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 width: '100%',
                 height: 48,
                 borderRadius: 8,
@@ -192,11 +198,12 @@ export function CartDrawer() {
                 color: colors.onPrimary,
                 fontSize: 16,
                 fontWeight: 600,
+                textDecoration: 'none',
                 cursor: 'pointer',
               }}
             >
               Proceed to Checkout
-            </button>
+            </Link>
             <button
               onClick={clearCart}
               style={{
