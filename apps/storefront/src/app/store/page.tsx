@@ -382,6 +382,8 @@ const toggleCategory = (id: string) => {
     return [...new Set(catProducts.map((p) => p.supplier?.name).filter(Boolean))] as string[]
   }, [products, filters.categories])
 
+  if (!isOpen) return null
+
   return (
     <>
       <style>{slideInRightKeyframes}</style>
