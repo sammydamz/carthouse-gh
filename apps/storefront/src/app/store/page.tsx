@@ -34,7 +34,7 @@ type FilterState = {
   brands: string[]
   search: string
   sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
-  viewMode: 'grid_3' | 'grid_2'
+  viewMode: 'grid' | 'list'
   page: number
   perPage: number
 }
@@ -528,18 +528,18 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
       {isDesktop && (
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         <button
-          onClick={() => onFilterChange({ viewMode: 'grid_3' })}
-          title="4 columns"
-          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => onFilterChange({ viewMode: 'grid' })}
+          title="Grid view"
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="8" rx="1" /><rect x="3" y="13" width="8" height="8" rx="1" /><rect x="13" y="13" width="8" height="8" rx="1" /></svg>
         </button>
         <button
-          onClick={() => onFilterChange({ viewMode: 'grid_2' })}
-          title="2 columns"
-          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => onFilterChange({ viewMode: 'list' })}
+          title="List view"
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'list' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="2" rx="1" /><rect x="4" y="11" width="16" height="2" rx="1" /><rect x="4" y="17" width="16" height="2" rx="1" /></svg>
         </button>
       </div>
       )}
@@ -595,12 +595,61 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
   )
 }
 
+// 4b. Product Card (Horizontal / List View)
+function ProductCardHorizontal({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
+  return (
+    <a
+      href={`/store/products/${product.slug}`}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'flex' }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
+      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
+    >
+      <div style={{ width: 200, minHeight: 200, flexShrink: 0, background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {product.media[0] ? (
+          <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
+        ) : (
+          <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
+        )}
+      </div>
+      <div style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
+        <span style={{ fontSize: 15, fontWeight: 600, color: colors.ink }}>{product.name}</span>
+        {product.description && <span style={{ fontSize: 13, color: colors.charcoal, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.description}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 'auto' }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
+          {product.condition && <span style={{ fontSize: 12, color: colors.muted }}>{product.condition}</span>}
+          {product.stock > 0 ? (
+            <span style={{ padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+          ) : (
+            <span style={{ padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticDown, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+          )}
+        </div>
+        <button
+          onClick={(e) => { e.preventDefault(); onAddToCart() }}
+          style={{ alignSelf: 'flex-start', marginTop: 4, padding: '8px 24px', borderRadius: rounded.pill, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+        >
+          Add to Cart
+        </button>
+      </div>
+    </a>
+  )
+}
+
 // 5. Product Grid
-function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
+function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid' | 'list'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
+  if (viewMode === 'list') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {products.map((product) => (
+          <ProductCardHorizontal key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
+        ))}
+      </div>
+    )
+  }
   const cols = (() => {
     if (isMobile) return 2
     if (isTablet) return 2
-    return viewMode === 'grid_3' ? 4 : 2
+    return 4
   })()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
@@ -766,7 +815,7 @@ function StorefrontPage() {
     brands: searchParams.get('brands')?.split(',').filter(Boolean) || [],
     search: searchParams.get('search') || '',
     sortBy: (searchParams.get('sortBy') as FilterState['sortBy']) || 'trending',
-    viewMode: (searchParams.get('viewMode') as FilterState['viewMode']) || 'grid_3',
+    viewMode: (searchParams.get('viewMode') as FilterState['viewMode']) || 'grid',
     page: parseInt(searchParams.get('page') || '1'),
     perPage: 20,
   })
@@ -804,7 +853,7 @@ function StorefrontPage() {
     if (update.brands?.length) params.set('brands', update.brands.join(','))
     if (update.search) params.set('search', update.search)
     if (update.sortBy && update.sortBy !== 'trending') params.set('sortBy', update.sortBy)
-    if (update.viewMode && update.viewMode !== 'grid_3') params.set('viewMode', update.viewMode)
+    if (update.viewMode && update.viewMode !== 'grid') params.set('viewMode', update.viewMode)
     if (update.page && update.page > 1) params.set('page', update.page.toString())
     
     const query = params.toString()
