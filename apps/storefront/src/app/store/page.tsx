@@ -216,6 +216,80 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
 </div>
       </div>
 
+      {/* Status Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => onFilterChange({ status })}
+              style={{
+                padding: '10px 16px',
+                borderRadius: rounded.pill,
+                height: 44,
+                border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
+                background: filters.status === status ? colors.primary : colors.surfaceSoft,
+                color: filters.status === status ? colors.onPrimary : colors.ink,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="number"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="0"
+          />
+          <span style={{ color: colors.muted, fontSize: 13 }}>to</span>
+          <input
+            type="number"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="10000"
+          />
+        </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {brands.map((brand) => (
+            <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={filters.brands.includes(brand)}
+                onChange={(e) => {
+                  const newBrands = e.target.checked
+                    ? [...filters.brands, brand]
+                    : filters.brands.filter((b) => b !== brand)
+                  onFilterChange({ brands: newBrands })
+                }}
+                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+              />
+              <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Clear All */}
       {onClearAll && (
         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-start' }}>
