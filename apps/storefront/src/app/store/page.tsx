@@ -595,7 +595,7 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 
 // 4b. Product Card (Horizontal / List View)
 function ProductCardHorizontal({ product, isMobile, isTablet }: { product: Product; isMobile?: boolean; isTablet?: boolean }) {
-  const imgSize = isMobile ? 80 : isTablet ? 110 : 130
+  const imgSize = isMobile ? 120 : isTablet ? 150 : 130
   return (
     <a
       href={`/store/products/${product.slug}`}
