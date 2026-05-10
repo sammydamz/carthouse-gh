@@ -116,8 +116,8 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         </div>
         {/* Links */}
         <nav style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {['Explore', 'Deals', 'About Us', 'Contact'].map((link) => (
-            <Link key={link} href="#" style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link}</Link>
+          {[{ label: 'Explore', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'About Us', href: '/about' }, { label: 'Contact', href: '/contact' }].map((link) => (
+            <Link key={link.label} href={link.href} style={{ padding: '14px 16px', borderRadius: 8, color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>{link.label}</Link>
           ))}
         </nav>
       </div>
@@ -497,8 +497,8 @@ function Footer() {
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {['About Us', 'Shop', 'Deals', 'Contact'].map((link) => (
-              <a key={link} href="#" style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link}</a>
+            {[{ label: 'About Us', href: '/about' }, { label: 'Shop', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'Contact', href: '/contact' }].map((link) => (
+              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link.label}</Link>
             ))}
           </div>
         </div>
