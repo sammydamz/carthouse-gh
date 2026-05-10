@@ -497,7 +497,7 @@ const toggleCategory = (id: string) => {
 }
 
 // 3. Toolbar
-function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; }) {
+function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, onClearAll, isDesktop }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; onOpenFilters?: () => void; showFiltersButton?: boolean; onClearAll?: () => void; isDesktop: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 24, height: 48, padding: '8px 0' }}>
 {/* Sort Dropdown */}
@@ -518,6 +518,7 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
 </div>
 
       {/* View Toggle */}
+      {isDesktop && (
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_3' })}
@@ -534,6 +535,7 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
           <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
         </button>
       </div>
+      )}
 
       </div>
   )
@@ -846,7 +848,7 @@ function StorefrontPage() {
           {isDesktop && <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} products={products} onClearAll={handleClearAll} />}
 
           <div style={{ flex: 1 }}>
-            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} />
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} onClearAll={handleClearAll} isDesktop={isDesktop} />
             <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} isDesktop={isDesktop} isTablet={isTablet} isMobile={isMobile} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
