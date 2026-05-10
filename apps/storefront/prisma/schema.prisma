@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  imageUrl  String?
+  parentId  String?
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([slug])
+}
+
+model Supplier {
+  id             String    @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  address        String?
+  deliveryZones  String[]
+  deliveryFee    Float?
+  notes          String?
+  products       Product[]
+  orderItems     OrderItem[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([name])
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  description String?
+  price       Float
+  condition   String?
+  stock       Int             @default(0)
+  isAvailable Boolean         @default(true)
+  isDeleted   Boolean         @default(false)
+  media       String[]
+  videoUrl    String?
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id])
+  supplierId  String?
+  supplier    Supplier?       @relation(fields: [supplierId], references: [id])
+  variants    ProductVariant[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([supplierId])
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId  String   @unique
+  size       String?
+  color      String?
+  stock      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([productId])
+  @@unique([productId, size, color])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerPhone   String
+  customerRegion  String?
+  customerAddress String
+  deliveryInstructions String?
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  orderStatus     OrderStatus   @default(PENDING)
+  totalAmount     Float
+  deliveryFee     Float        @default(0)
+  notes           String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([orderNumber])
+  @@index([customerPhone])
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  productName  String
+  productImage String?
+  quantity     Int
+  price        Float
+  size         String?
+  color        String?
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum PaymentMethod {
+  PAYSTACK
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  DELIVERED_PAID
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
