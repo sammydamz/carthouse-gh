@@ -10,7 +10,6 @@ export async function GET(request: Request) {
 
     const where: Record<string, unknown> = {
       isDeleted: false,
-      isAvailable: true,
     }
 
     if (categoryId) {
@@ -28,6 +27,7 @@ export async function GET(request: Request) {
       where,
       include: {
         category: true,
+        supplier: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

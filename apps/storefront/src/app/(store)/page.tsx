@@ -1,13 +1,33 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
+// Meta Design System Colors
+const colors = {
+  canvas: '#ffffff',
+  surfaceSoft: '#f1f4f7',
+  inkDeep: '#0a1317',
+  ink: '#1c1e21',
+  charcoal: '#444950',
+  slate: '#4b4c4f',
+  steel: '#5d6c7b',
+  stone: '#8595a4',
+  hairline: '#ced0d4',
+  hairlineSoft: '#dee3e9',
+  primary: '#0064e0',
+  onPrimary: '#ffffff',
+  success: '#31a24c',
+  warning: '#f2a918',
+  critical: '#e41e3f',
+}
+
+// --- Types ---
 interface Category {
   id: string
   name: string
   slug: string
+  parentId: string | null
   imageUrl: string | null
-  children: Category[]
 }
 
 interface Product {
@@ -15,268 +35,388 @@ interface Product {
   name: string
   slug: string
   price: number
+  stock: number
   media: string[]
   isAvailable: boolean
   category: Category | null
+  supplier: { name: string } | null
 }
 
-interface HeroSlide {
-  id: number
-  title: string
-  subtitle: string
-  image: string
-  cta: string
+type FilterState = {
+  status: 'all' | 'in_stock' | 'on_sale'
+  priceMin: number
+  priceMax: number
+  categories: string[]
+  search: string
+  sortBy: 'trending' | 'price_asc' | 'price_desc' | 'newest'
+  viewMode: 'grid_3' | 'grid_2'
 }
 
-const heroSlides: HeroSlide[] = [
-  {
-    id: 1,
-    title: 'Get 25% Off',
-    subtitle: 'Top-rated electronics and accessories',
-    image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1200&h=600&fit=crop',
-    cta: 'Shop Now',
-  },
-  {
-    id: 2,
-    title: 'Premium Tech',
-    subtitle: 'Latest gadgets at great prices',
-    image: 'https://images.unsplash.com/photo-1519385970471-6ba2754f8f34?w=1200&h=600&fit=crop',
-    cta: 'Explore',
-  },
-  {
-    id: 3,
-    title: 'Free Delivery',
-    subtitle: 'On orders over GH₵500',
-    image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=600&fit=crop',
-    cta: 'Learn More',
-  },
-]
+// --- Mock Data ---
+const brands = ['Apple', 'Samsung', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Asus']
 
-const socialLinks = [
-  { name: 'Facebook', icon: 'f', url: '#' },
-  { name: 'Instagram', icon: 'ig', url: '#' },
-  { name: 'Twitter', icon: 'x', url: '#' },
-  { name: 'WhatsApp', icon: 'wa', url: '#' },
-]
+// --- Components ---
 
+// 1. Navbar
+function Navbar({ cartCount, search, onSearchChange }: { cartCount: number; search: string; onSearchChange: (v: string) => void }) {
+  return (
+    <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
+          <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>CartHouse GH</span>
+        </div>
+
+        {/* Search */}
+        <div style={{ flex: 1, maxWidth: 320, position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
+          />
+          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        {/* Nav Links & Cart */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <a href="#" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</a>
+          <a href="#" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</a>
+          <button style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {cartCount > 0 && (
+              <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cartCount}</span>
+            )}
+          </button>
+        </nav>
+      </div>
+    </header>
+  )
+}
+
+// 2. Sidebar Filter Panel
+function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void; categories: Category[] }) {
+  const [priceMin, setPriceMin] = useState(filters.priceMin.toString())
+  const [priceMax, setPriceMax] = useState(filters.priceMax.toString())
+
+  return (
+    <aside style={{ width: 240, paddingRight: 24, flexShrink: 0 }}>
+      {/* Category Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Category</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {categories.slice(0, 8).map((cat) => (
+            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={filters.categories.includes(cat.id)}
+                onChange={(e) => {
+                  const newCats = e.target.checked
+                    ? [...filters.categories, cat.id]
+                    : filters.categories.filter((id) => id !== cat.id)
+                  onFilterChange({ categories: newCats })
+                }}
+                style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }}
+              />
+              <span style={{ fontSize: 14, color: colors.ink }}>{cat.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Status Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Status</h3>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => onFilterChange({ status })}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 20,
+                border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
+                background: filters.status === status ? colors.inkDeep : colors.canvas,
+                color: filters.status === status ? colors.canvas : colors.charcoal,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              {status === 'all' ? 'All' : status === 'in_stock' ? 'In Stock' : 'On Sale'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Filter */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="number"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })}
+            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="0"
+          />
+          <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
+          <input
+            type="number"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })}
+            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            placeholder="10000"
+          />
+        </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Brand</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {brands.map((brand) => (
+            <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 36, cursor: 'pointer' }}>
+              <input type="checkbox" style={{ width: 16, height: 16, borderRadius: 4, accentColor: colors.primary }} />
+              <span style={{ fontSize: 14, color: colors.ink }}>{brand}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+// 3. Toolbar
+function Toolbar({ filters, onFilterChange }: { filters: FilterState; onFilterChange: (f: Partial<FilterState>) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 48, padding: '8px 0' }}>
+      {/* Filters Button */}
+      <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+        <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Filters
+        <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+      </button>
+
+      {/* Clear All */}
+      <button style={{ border: 'none', background: 'none', color: colors.ink, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear all</button>
+
+      {/* Refresh */}
+      <button style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
+
+      {/* Inline Search */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search by products"
+          value={filters.search}
+          onChange={(e) => onFilterChange({ search: e.target.value })}
+          style={{ width: '100%', height: 38, padding: '0 12px 0 36px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, outline: 'none', color: colors.ink }}
+        />
+        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* Sort Dropdown */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130 }}>
+        <span style={{ color: colors.ink }}>Trending</span>
+        <span style={{ color: colors.steel }}>˅</span>
+      </div>
+
+      {/* View Toggle */}
+      <div style={{ display: 'flex', gap: 0 }}>
+        <button
+          onClick={() => onFilterChange({ viewMode: 'grid_3' })}
+          style={{ width: 34, height: 34, borderRadius: '8px 0 0 8px', border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+        </button>
+        <button
+          onClick={() => onFilterChange({ viewMode: 'grid_2' })}
+          style={{ width: 34, height: 34, borderRadius: '0 8px 8px 0', border: `1px solid ${colors.hairline}`, borderLeft: 'none', background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// 4. Product Card
+function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
+  return (
+    <div
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s' }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
+      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
+    >
+      {/* Image */}
+      <div style={{ aspectRatio: '1/1', background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {product.media[0] ? (
+          <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
+        ) : (
+          <svg width={48} height={48} fill={colors.steel} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
+        )}
+        {/* Download icon */}
+        <button style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(10,19,23,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width={14} height={14} fill={colors.steel} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '10px 12px' }}>
+        {/* Brand */}
+        {product.category && <span style={{ fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
+        
+        {/* Name */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: colors.ink, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
+          <span style={{ color: colors.steel, fontSize: 16 }}>···</span>
+        </div>
+
+        {/* Price */}
+        <div style={{ fontSize: 12, color: colors.charcoal, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
+
+        {/* Stock badge */}
+        {product.stock > 0 ? (
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.success, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+        ) : (
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.critical, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// 5. Product Grid
+function ProductGrid({ products, viewMode, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; onAddToCart: (p: Product) => void }) {
+  const cols = viewMode === 'grid_3' ? 5 : 3
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} onAddToCart={() => onAddToCart(product)} />
+      ))}
+    </div>
+  )
+}
+
+// 6. Footer
+function Footer() {
+  return (
+    <footer style={{ background: colors.canvas, borderTop: `1px solid ${colors.hairlineSoft}`, padding: '64px 24px' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
+          <p style={{ fontSize: 14, color: colors.steel, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
+          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📞 +233 20 123 4567</p>
+          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📧 info@carthousegh.com</p>
+          <p style={{ fontSize: 14, color: colors.steel }}>📍 Accra, Ghana</p>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {['About Us', 'Shop', 'Deals', 'Contact'].map((link) => (
+              <a key={link} href="#" style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link}</a>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {['FB', 'IG', 'X', 'WA'].map((social) => (
+              <span key={social} style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel, fontSize: 12 }}>{social}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: colors.stone }}>© 2026 CartHouse GH. All rights reserved.</p>
+      </div>
+    </footer>
+  )
+}
+
+// --- Main Page ---
 export default function StorefrontPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
   const [cartCount, setCartCount] = useState(0)
+  const [filters, setFilters] = useState<FilterState>({
+    status: 'all',
+    priceMin: 0,
+    priceMax: 10000,
+    categories: [],
+    search: '',
+    sortBy: 'trending',
+    viewMode: 'grid_3',
+  })
 
   useEffect(() => {
-    fetch('/api/public/categories')
-      .then((res) => res.json())
-      .then((data) => setCategories(data.filter((c: Category) => !c.parentId)))
-      .catch(console.error)
-
-    fetch('/api/public/products?limit=12')
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch(console.error)
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-    }, 5000)
-
-    return () => clearInterval(interval)
+    fetch('/api/public/categories').then((r) => r.json()).then((d) => setCategories(d)).catch(console.error)
+    fetch('/api/public/products?limit=50').then((r) => r.json()).then((d) => setProducts(d)).catch(console.error)
   }, [])
+
+  const filteredProducts = useMemo(() => {
+    let result = [...products]
+    
+    // Filter by availability based on status
+    if (filters.status === 'in_stock') result = result.filter((p) => p.stock > 0)
+    if (filters.status === 'on_sale') result = result.filter((p) => p.isAvailable)
+    
+    // Filter by price
+    result = result.filter((p) => p.price >= filters.priceMin && p.price <= filters.priceMax)
+    
+    // Filter by category
+    if (filters.categories.length > 0) result = result.filter((p) => p.category && filters.categories.includes(p.category.id))
+    
+    // Filter by search
+    if (filters.search) result = result.filter((p) => p.name.toLowerCase().includes(filters.search.toLowerCase()))
+    
+    // Sort
+    if (filters.sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
+    if (filters.sortBy === 'price_desc') result.sort((a, b) => b.price - a.price)
+    if (filters.sortBy === 'newest') result.sort((a, b) => 0) // Would need createdAt
+    
+    return result
+  }, [products, filters])
+
+  const handleFilterChange = (update: Partial<FilterState>) => {
+    setFilters((prev) => ({ ...prev, ...update }))
+  }
 
   const handleAddToCart = () => {
     setCartCount((prev) => prev + 1)
   }
 
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: '#ffffff', color: '#1c1e21' }}>
-      {/* Navbar */}
-      <header style={{ position: 'sticky', top: 0, background: '#ffffff', borderBottom: '1px solid #dee3e9', zIndex: 100 }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Logo */}
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#0064e0', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 32, height: 32, background: '#0064e0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18 }}>C</span>
-            CartHouse GH
-          </div>
-
-          {/* Search */}
-          <div style={{ flex: 1, maxWidth: 400, margin: '0 24px' }}>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', height: 40, padding: '0 16px 0 40px', borderRadius: 100, border: '1px solid #ced0d4', background: '#f1f4f7', fontSize: 14, outline: 'none' }}
-              />
-              <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: '#5d6c7b' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <a href="#" style={{ color: '#1c1e21', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>Home</a>
-            <a href="#" style={{ color: '#5d6c7b', textDecoration: 'none', fontSize: 14 }}>Deals</a>
-            <a href="#" style={{ color: '#5d6c7b', textDecoration: 'none', fontSize: 14 }}>Contact</a>
-            <button style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: '#f1f4f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <svg width={20} height={20} fill="none" stroke="#1c1e21" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {cartCount > 0 && (
-                <span style={{ position: 'absolute', top: -2, right: -2, background: '#0064e0', color: '#fff', fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Carousel */}
-      <section style={{ position: 'relative', height: 400, overflow: 'hidden', background: '#0a1317' }}>
-        {heroSlides.map((slide, index) => (
-          <div
-            key={slide.id}
-            style={{
-              position: 'absolute', inset: 0,
-              opacity: index === currentSlide ? 1 : 0,
-              transition: 'opacity 0.5s ease',
-            }}
-          >
-            <img src={slide.image} alt={slide.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-              <h1 style={{ fontSize: 48, fontWeight: 500, marginBottom: 12 }}>{slide.title}</h1>
-              <p style={{ fontSize: 18, marginBottom: 24, color: '#ced0d4' }}>{slide.subtitle}</p>
-              <button style={{ padding: '14px 30px', borderRadius: 100, border: 'none', background: '#000000', color: '#ffffff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                {slide.cta}
-              </button>
-            </div>
-          </div>
-        ))}
-        {/* Dots */}
-        <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8 }}>
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              style={{ width: 10, height: 10, borderRadius: '50%', border: 'none', background: index === currentSlide ? '#ffffff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}
-            />
-          ))}
-        </div>
-        {/* Arrows */}
-        <button onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff', cursor: 'pointer', fontSize: 20 }}>‹</button>
-        <button onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff', cursor: 'pointer', fontSize: 20 }}>›</button>
-      </section>
-
-      {/* Category Grid */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
-        <h2 style={{ fontSize: 24, fontWeight: 500, marginBottom: 24 }}>Shop by Category</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-          {categories.slice(0, 8).map((cat) => (
-            <a
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
-            >
-              <div style={{ borderRadius: 32, overflow: 'hidden', border: '1px solid #dee3e9', transition: 'box-shadow 0.2s' }}>
-                {cat.imageUrl ? (
-                  <img src={cat.imageUrl} alt={cat.name} style={{ width: '100%', height: 140, objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: 140, background: '#f1f4f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width={40} height={40} fill="#5d6c7b" viewBox="0 0 24 24">
-                      <path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" />
-                    </svg>
-                  </div>
-                )}
-                <div style={{ padding: '12px 16px', textAlign: 'center' }}>
-                  <span style={{ fontSize: 14, fontWeight: 600 }}>{cat.name}</span>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 64px' }}>
-        <h2 style={{ fontSize: 24, fontWeight: 500, marginBottom: 24 }}>Featured Products</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
-          {products.filter(p => p.isAvailable).slice(0, 12).map((product) => (
-            <div
-              key={product.id}
-              style={{ borderRadius: 32, border: '1px solid #dee3e9', overflow: 'hidden', transition: 'box-shadow 0.2s', cursor: 'pointer' }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-            >
-              <div style={{ aspectRatio: '1/1', background: '#f1f4f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {product.media[0] ? (
-                  <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
-                ) : (
-                  <svg width={60} height={60} fill="#5d6c7b" viewBox="0 0 24 24">
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-4h4v-2h-4V7h-2v4H8v2h4z" />
-                  </svg>
-                )}
-              </div>
-              <div style={{ padding: '12px 16px' }}>
-                {product.category && (
-                  <span style={{ fontSize: 11, color: '#5d6c7b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>
-                )}
-                <h3 style={{ fontSize: 14, fontWeight: 600, margin: '4px 0', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{product.name}</h3>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#1c1e21', marginTop: 8 }}>GH₵{product.price.toFixed(2)}</div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleAddToCart() }}
-                  style={{ width: '100%', marginTop: 12, padding: '10px 16px', borderRadius: 100, border: 'none', background: '#0064e0', color: '#ffffff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  Add to Cart
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ background: '#ffffff', borderTop: '1px solid #dee3e9', padding: '64px 24px' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#0064e0', marginBottom: 16 }}>CartHouse GH</div>
-            <p style={{ fontSize: 14, color: '#5d6c7b', lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
-          </div>
-          <div>
-            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Contact</h4>
-            <p style={{ fontSize: 14, color: '#5d6c7b', marginBottom: 8 }}>📞 +233 20 123 4567</p>
-            <p style={{ fontSize: 14, color: '#5d6c7b', marginBottom: 8 }}>📧 info@carthousegh.com</p>
-            <p style={{ fontSize: 14, color: '#5d6c7b' }}>📍 Accra, Ghana</p>
-          </div>
-          <div>
-            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Quick Links</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <a href="#" style={{ fontSize: 14, color: '#5d6c7b', textDecoration: 'none' }}>About Us</a>
-              <a href="#" style={{ fontSize: 14, color: '#5d6c7b', textDecoration: 'none' }}>Shop</a>
-              <a href="#" style={{ fontSize: 14, color: '#5d6c7b', textDecoration: 'none' }}>Deals</a>
-              <a href="#" style={{ fontSize: 14, color: '#5d6c7b', textDecoration: 'none' }}>Contact</a>
-            </div>
-          </div>
-          <div>
-            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Follow Us</h4>
-            <div style={{ display: 'flex', gap: 12 }}>
-              {socialLinks.map((link) => (
-                <a key={link.name} href={link.url} style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid #dee3e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5d6c7b', textDecoration: 'none', fontSize: 12 }}>
-                  {link.icon === 'f' && 'f'}
-                  {link.icon === 'ig' && 'IG'}
-                  {link.icon === 'x' && 'X'}
-                  {link.icon === 'wa' && 'WA'}
-                </a>
-              ))}
-            </div>
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
+      <Navbar cartCount={cartCount} search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} />
+      
+      <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
+        <div style={{ display: 'flex' }}>
+          <Sidebar filters={filters} onFilterChange={handleFilterChange} categories={categories} />
+          
+          <div style={{ flex: 1 }}>
+            <Toolbar filters={filters} onFilterChange={handleFilterChange} />
+            <ProductGrid products={filteredProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
           </div>
         </div>
-        <div style={{ maxWidth: 1280, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #dee3e9', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: '#8595a4' }}>© 2026 CartHouse GH. All rights reserved.</p>
-        </div>
-      </footer>
+      </main>
+
+      <Footer />
     </div>
   )
 }
