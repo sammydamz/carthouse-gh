@@ -148,16 +148,9 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 }
 
 // 1. Navbar
-function Navbar({ search, onSearchChange, onMenuToggle }: { search: string; onSearchChange: (v: string) => void; onMenuToggle?: () => void }) {
+function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }: { search: string; onSearchChange: (v: string) => void; onMenuToggle?: () => void; isMobile?: boolean }) {
   const { itemCount, setIsOpen } = useCart()
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkWidth = () => setIsMobile(window.innerWidth < 768)
-    checkWidth()
-    window.addEventListener('resize', checkWidth)
-    return () => window.removeEventListener('resize', checkWidth)
-  }, [])
+  const isMobile = isMobileProp ?? false
 
   return (
     <header style={{ position: 'sticky', top: 0, background: colors.canvas, borderBottom: `1px solid ${colors.hairlineSoft}`, zIndex: 100, height: 60 }}>
@@ -275,7 +268,7 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
             type="number"
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
-            onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })}
+onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
             style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="0"
           />
@@ -284,7 +277,7 @@ function Sidebar({ filters, onFilterChange, categories }: { filters: FilterState
             type="number"
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
-            onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })}
+onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
             style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="10000"
           />
@@ -372,9 +365,9 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: parseInt(priceMin) || 0 })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
               <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
-              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: parseInt(priceMax) || 10000 })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
             </div>
           </div>
           <div>
@@ -441,10 +434,16 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton }: 
       </div>
 
       {/* Sort Dropdown */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130 }}>
-        <span style={{ color: colors.ink }}>Trending</span>
-        <span style={{ color: colors.steel }}>˅</span>
-      </div>
+      <select
+        value={filters.sortBy}
+        onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
+        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer', minWidth: 130, color: colors.ink }}
+      >
+        <option value="trending">Trending</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="newest">Newest</option>
+      </select>
 
       {/* View Toggle */}
       <div style={{ display: 'flex', gap: 0 }}>
@@ -513,8 +512,12 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 }
 
 // 5. Product Grid
-function ProductGrid({ products, viewMode, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; onAddToCart: (p: Product) => void }) {
-  const cols = viewMode === 'grid_3' ? 5 : 3
+function ProductGrid({ products, viewMode, isDesktop, isTablet, isMobile, onAddToCart }: { products: Product[]; viewMode: 'grid_3' | 'grid_2'; isDesktop: boolean; isTablet: boolean; isMobile: boolean; onAddToCart: (p: Product) => void }) {
+  const cols = (() => {
+    if (isMobile) return 2
+    if (isTablet) return 3
+    return viewMode === 'grid_3' ? 4 : 2
+  })()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
       {products.map((product) => (
@@ -635,7 +638,7 @@ function StorefrontPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { addItem } = useCart()
-  const { isDesktop } = useResponsive()
+  const { isDesktop, isTablet, isMobile } = useResponsive()
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
@@ -725,7 +728,7 @@ function StorefrontPage() {
 
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: colors.canvas, color: colors.ink, minHeight: '100vh' }}>
-      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} onMenuToggle={() => setIsMobileMenuOpen(true)} />
+      <Navbar search={filters.search} onSearchChange={(v) => handleFilterChange({ search: v })} onMenuToggle={() => setIsMobileMenuOpen(true)} isMobile={isMobile} />
 
       <MobileMenuDrawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
@@ -744,7 +747,7 @@ function StorefrontPage() {
 
           <div style={{ flex: 1 }}>
             <Toolbar filters={filters} onFilterChange={handleFilterChange} showFiltersButton={!isDesktop} onOpenFilters={() => setIsFilterDrawerOpen(true)} />
-            <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} onAddToCart={handleAddToCart} />
+            <ProductGrid products={paginatedProducts} viewMode={filters.viewMode} isDesktop={isDesktop} isTablet={isTablet} isMobile={isMobile} onAddToCart={handleAddToCart} />
             <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => handleFilterChange({ page: p })} />
           </div>
         </div>
