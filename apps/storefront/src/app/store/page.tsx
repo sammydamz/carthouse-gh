@@ -180,9 +180,8 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
             {itemCount > 0 && (
               <span style={{ position: 'absolute', top: -2, right: -2, background: colors.primary, color: colors.onPrimary, fontSize: 10, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{itemCount}</span>
             )}
-</button>
-      </div>
-
+          </button>
+        </nav>
       </div>
     </header>
   )
@@ -610,12 +609,12 @@ function ProductCardHorizontal({ product }: { product: Product }) {
           <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
         )}
       </div>
-      <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.ink }}>{product.name}</span>
         {product.description && <span style={{ fontSize: 12, color: colors.charcoal, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.description}</span>}
-        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: colors.ink }}>GH₵{product.price.toFixed(2)}</span>
           {product.stock > 0 ? (
             <span style={{ padding: '1px 6px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
           ) : (
