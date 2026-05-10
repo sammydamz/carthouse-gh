@@ -4,27 +4,8 @@ import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
+import { colors, rounded } from '@/lib/design-system'
 
-// Meta Design System Colors
-const colors = {
-  canvas: '#ffffff',
-  surfaceSoft: '#f1f4f7',
-  inkDeep: '#0a1317',
-  ink: '#1c1e21',
-  charcoal: '#444950',
-  slate: '#4b4c4f',
-  steel: '#5d6c7b',
-  stone: '#8595a4',
-  hairline: '#ced0d4',
-  hairlineSoft: '#dee3e9',
-  primary: '#0064e0',
-  onPrimary: '#ffffff',
-  success: '#31a24c',
-  warning: '#f2a918',
-  critical: '#e41e3f',
-}
-
-// --- Types ---
 interface Category {
   id: string
   name: string
@@ -130,7 +111,7 @@ function MobileMenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             <div style={{ width: 28, height: 28, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.onPrimary, fontWeight: 700, fontSize: 16 }}>C</div>
             <span style={{ fontSize: 16, fontWeight: 600, color: colors.ink }}>Menu</span>
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -158,7 +139,7 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
         {/* Left: Logo + Hamburger (mobile) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {isMobile && onMenuToggle && (
-            <button onClick={onMenuToggle} aria-label="Open menu" style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={onMenuToggle} aria-label="Open menu" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width={22} height={22} fill="none" stroke={colors.ink} viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -176,9 +157,9 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
               placeholder="Search products..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              style={{ width: '100%', height: 38, padding: '0 12px 0 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
+              style={{ width: '100%', height: 44, borderRadius: rounded.pill, padding: '0 16px', boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 14, outline: 'none', color: colors.ink }}
             />
-            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: colors.muted }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -189,10 +170,10 @@ function Navbar({ search, onSearchChange, onMenuToggle, isMobile: isMobileProp }
           {!isMobile && (
             <>
               <Link href="/store" style={{ color: colors.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>Explore</Link>
-              <Link href="/store?status=on_sale" style={{ color: colors.steel, textDecoration: 'none', fontSize: 15 }}>Deals</Link>
+              <Link href="/store?status=on_sale" style={{ color: colors.muted, textDecoration: 'none', fontSize: 15 }}>Deals</Link>
             </>
           )}
-          <button onClick={() => setIsOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          <button onClick={() => setIsOpen(true)} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
@@ -252,8 +233,9 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
               key={status}
               onClick={() => onFilterChange({ status })}
               style={{
-                padding: '8px 12px',
-                borderRadius: 8,
+                padding: '10px 16px',
+                borderRadius: rounded.pill,
+                height: 44,
                 border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
                 background: filters.status === status ? colors.primary : colors.surfaceSoft,
                 color: filters.status === status ? colors.onPrimary : colors.ink,
@@ -278,16 +260,16 @@ function Sidebar({ filters, onFilterChange, categories, onClearAll }: { filters:
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
 onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })}
-            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="0"
           />
-          <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
+          <span style={{ color: colors.muted, fontSize: 13 }}>to</span>
           <input
             type="number"
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
 onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })}
-            style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
+            style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }}
             placeholder="10000"
           />
         </div>
@@ -338,7 +320,7 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${colors.hairlineSoft}` }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: colors.ink }}>Filters</span>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: 'none', background: colors.surfaceSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width={20} height={20} fill="none" stroke={colors.ink} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -362,7 +344,7 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
             <div style={{ display: 'flex', gap: 6 }}>
               {(['all', 'in_stock', 'on_sale'] as const).map((status) => (
                 <button key={status} onClick={() => onFilterChange({ status })} style={{
-                  padding: '8px 12px', borderRadius: 8,
+                  padding: '10px 16px', borderRadius: rounded.pill, height: 44,
                   border: filters.status === status ? 'none' : `1px solid ${colors.hairline}`,
                   background: filters.status === status ? colors.primary : colors.surfaceSoft,
                   color: filters.status === status ? colors.onPrimary : colors.ink,
@@ -374,9 +356,9 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.ink, marginBottom: 12 }}>Price (GH₵)</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
-              <span style={{ color: colors.steel, fontSize: 13 }}>to</span>
-              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, padding: '8px', borderRadius: 8, border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} onBlur={() => onFilterChange({ priceMin: isNaN(parseInt(priceMin)) ? 0 : parseInt(priceMin) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="0" />
+              <span style={{ color: colors.muted, fontSize: 13 }}>to</span>
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} onBlur={() => onFilterChange({ priceMax: isNaN(parseInt(priceMax)) ? 10000 : parseInt(priceMax) })} style={{ width: 80, height: 44, padding: '0 12px', borderRadius: rounded.pill, boxSizing: 'border-box', border: `1px solid ${colors.hairline}`, fontSize: 14, background: colors.surfaceSoft }} placeholder="10000" />
             </div>
           </div>
           <div>
@@ -395,8 +377,8 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, categories, on
           </div>
         </div>
         <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.hairlineSoft}`, display: 'flex', gap: 12 }}>
-          <button onClick={onClearAll} style={{ flex: 1, padding: '12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
-          <button onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 14, cursor: 'pointer', fontWeight: 600 }}>Apply</button>
+          <button onClick={onClearAll} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>Clear all</button>
+          <button onClick={onClose} style={{ flex: 1, padding: '12px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: colors.primary, color: colors.onPrimary, fontSize: 14, cursor: 'pointer', fontWeight: 600 }}>Apply</button>
         </div>
       </div>
     </>
@@ -415,17 +397,17 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
           placeholder="Search"
           value={filters.search}
           onChange={(e) => onFilterChange({ search: e.target.value })}
-          style={{ width: '100%', height: 36, padding: '8px 10px 8px 28px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 13, outline: 'none', color: colors.ink, boxSizing: 'border-box' }}
+          style={{ width: '100%', height: 44, padding: '0 16px 0 44px', borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.surfaceSoft, fontSize: 13, outline: 'none', color: colors.ink, boxSizing: 'border-box' }}
         />
-        <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: colors.steel, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: colors.muted, pointerEvents: 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
 
       {/* Filter Button - ONLY show on tablet/mobile when sidebar is hidden */}
       {showFiltersButton && (
-        <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
-          <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <button onClick={onOpenFilters} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 14, cursor: 'pointer' }}>
+          <svg width={18} height={18} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           Filters
           <span style={{ background: colors.primary, color: colors.onPrimary, fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
         </button>
@@ -435,7 +417,7 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
       <select
         value={filters.sortBy}
         onChange={(e) => onFilterChange({ sortBy: e.target.value as FilterState['sortBy'] })}
-        style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, height: 36, flexShrink: 0 }}
+        style={{ padding: '8px 12px', height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, fontSize: 13, cursor: 'pointer', minWidth: 120, color: colors.ink, flexShrink: 0 }}
       >
         <option value="trending">Trending</option>
         <option value="price_asc">Price: Low → High</option>
@@ -448,22 +430,22 @@ function Toolbar({ filters, onFilterChange, onOpenFilters, showFiltersButton, on
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_3' })}
           title="4 columns"
-          style={{ width: 34, height: 34, borderRadius: '8px 0 0 8px', border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_3' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
         </button>
         <button
           onClick={() => onFilterChange({ viewMode: 'grid_2' })}
           title="2 columns"
-          style={{ width: 34, height: 34, borderRadius: '0 8px 8px 0', border: `1px solid ${colors.hairline}`, borderLeft: 'none', background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: filters.viewMode === 'grid_2' ? colors.surfaceSoft : colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <svg width={16} height={16} fill={colors.steel} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
+          <svg width={18} height={18} fill={colors.muted} viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" /><rect x="13" y="3" width="8" height="18" /></svg>
         </button>
       </div>
 
       {/* Refresh - LAST position (least used action) */}
-      <button title="Refresh" style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width={16} height={16} fill="none" stroke={colors.steel} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      <button title="Refresh" style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width={18} height={18} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
       </button>
     </div>
   )
@@ -474,8 +456,8 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
   return (
     <a
       href={`/store/products/${product.slug}`}
-      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'block' }}
-      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
+      style={{ background: colors.canvas, border: `1px solid ${colors.hairlineSoft}`, borderRadius: rounded.xl, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', textDecoration: 'none', display: 'block' }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
       {/* Image */}
@@ -483,33 +465,33 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
         {product.media[0] ? (
           <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
         ) : (
-          <svg width={48} height={48} fill={colors.steel} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
+          <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
         )}
         {/* Download icon */}
         <button style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(10,19,23,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width={14} height={14} fill={colors.steel} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+          <svg width={14} height={14} fill={colors.muted} viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
         </button>
       </div>
 
       {/* Body */}
       <div style={{ padding: '10px 12px' }}>
         {/* Brand */}
-        {product.category && <span style={{ fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
+        {product.category && <span style={{ fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category.name}</span>}
         
         {/* Name */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 2 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: colors.ink, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
-          <span style={{ color: colors.steel, fontSize: 16 }}>···</span>
+          <span style={{ color: colors.muted, fontSize: 16 }}>···</span>
         </div>
 
         {/* Price */}
-        <div style={{ fontSize: 12, color: colors.charcoal, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
+        <div style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>GH₵{product.price.toFixed(2)}</div>
 
         {/* Stock badge */}
         {product.stock > 0 ? (
-          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.success, color: colors.canvas, fontSize: 10 }}>In Stock</span>
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticUp, color: colors.canvas, fontSize: 10 }}>In Stock</span>
         ) : (
-          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, background: colors.critical, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
+          <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: rounded.pill, background: colors.semanticDown, color: colors.canvas, fontSize: 10 }}>Out of Stock</span>
         )}
       </div>
     </a>
@@ -551,15 +533,15 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+        style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
       >
-        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        <svg width={16} height={16} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
       </button>
       
       {start > 1 && (
         <>
-          <button onClick={() => onPageChange(1)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>1</button>
-          {start > 2 && <span style={{ color: colors.steel }}>...</span>}
+          <button onClick={() => onPageChange(1)} style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: 'transparent', color: colors.muted, cursor: 'pointer' }}>1</button>
+          {start > 2 && <span style={{ color: colors.muted }}>...</span>}
         </>
       )}
       
@@ -568,11 +550,12 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
           key={page}
           onClick={() => onPageChange(page)}
           style={{
-            padding: '8px 14px',
-            borderRadius: 8,
+            padding: '10px 16px',
+            borderRadius: rounded.pill,
+            height: 44,
             border: currentPage === page ? 'none' : `1px solid ${colors.hairline}`,
-            background: currentPage === page ? colors.inkDeep : colors.canvas,
-            color: currentPage === page ? colors.canvas : colors.charcoal,
+            background: currentPage === page ? colors.ink : colors.canvas,
+            color: currentPage === page ? colors.canvas : colors.muted,
             cursor: 'pointer',
             fontWeight: currentPage === page ? 600 : 400,
           }}
@@ -583,17 +566,17 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
       
       {end < totalPages && (
         <>
-          {end < totalPages - 1 && <span style={{ color: colors.steel }}>...</span>}
-          <button onClick={() => onPageChange(totalPages)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'transparent', color: colors.charcoal, cursor: 'pointer' }}>{totalPages}</button>
+          {end < totalPages - 1 && <span style={{ color: colors.muted }}>...</span>}
+          <button onClick={() => onPageChange(totalPages)} style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: 'none', background: 'transparent', color: colors.muted, cursor: 'pointer' }}>{totalPages}</button>
         </>
       )}
       
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+        style={{ padding: '10px 16px', borderRadius: rounded.pill, height: 44, border: `1px solid ${colors.hairline}`, background: colors.canvas, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
       >
-        <svg width={16} height={16} fill="none" stroke={colors.charcoal} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <svg width={16} height={16} fill="none" stroke={colors.muted} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
       </button>
     </div>
   )
@@ -606,19 +589,19 @@ function Footer() {
       <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: colors.primary, marginBottom: 16 }}>CartHouse GH</div>
-          <p style={{ fontSize: 14, color: colors.steel, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
+          <p style={{ fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>Your trusted destination for premium electronics and gadgets in Ghana.</p>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Contact</h4>
-          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📞 +233 20 123 4567</p>
-          <p style={{ fontSize: 14, color: colors.steel, marginBottom: 8 }}>📧 info@carthousegh.com</p>
-          <p style={{ fontSize: 14, color: colors.steel }}>📍 Accra, Ghana</p>
+          <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>📞 +233 20 123 4567</p>
+          <p style={{ fontSize: 14, color: colors.muted, marginBottom: 8 }}>📧 info@carthousegh.com</p>
+          <p style={{ fontSize: 14, color: colors.muted }}>📍 Accra, Ghana</p>
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Quick Links</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[{ label: 'About Us', href: '/about' }, { label: 'Shop', href: '/store' }, { label: 'Deals', href: '/store?status=on_sale' }, { label: 'Contact', href: '/contact' }].map((link) => (
-              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: colors.steel, textDecoration: 'none' }}>{link.label}</Link>
+              <Link key={link.label} href={link.href} style={{ fontSize: 14, color: colors.muted, textDecoration: 'none' }}>{link.label}</Link>
             ))}
           </div>
         </div>
@@ -626,13 +609,13 @@ function Footer() {
           <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: colors.ink }}>Follow Us</h4>
           <div style={{ display: 'flex', gap: 12 }}>
             {['FB', 'IG', 'X', 'WA'].map((social) => (
-              <span key={social} style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.steel, fontSize: 12 }}>{social}</span>
+              <span key={social} style={{ width: 44, height: 44, borderRadius: rounded.pill, border: `1px solid ${colors.hairlineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted, fontSize: 12 }}>{social}</span>
             ))}
           </div>
         </div>
       </div>
       <div style={{ maxWidth: 1400, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${colors.hairlineSoft}`, textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: colors.stone }}>© 2026 CartHouse GH. All rights reserved.</p>
+        <p style={{ fontSize: 12, color: colors.mutedSoft }}>© 2026 CartHouse GH. All rights reserved.</p>
       </div>
     </footer>
   )
