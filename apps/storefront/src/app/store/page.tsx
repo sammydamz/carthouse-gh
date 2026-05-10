@@ -604,9 +604,9 @@ function ProductCardHorizontal({ product, onAddToCart }: { product: Product; onA
       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
     >
-      <div style={{ width: 200, minHeight: 200, flexShrink: 0, background: colors.surfaceSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 200, height: 200, flexShrink: 0, background: colors.surfaceSoft, overflow: 'hidden' }}>
         {product.media[0] ? (
-          <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
+          <img src={product.media[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <svg width={48} height={48} fill={colors.muted} viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>
         )}
