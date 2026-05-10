@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params
   const category = await prisma.category.findUnique({
     where: { id },
-    include: { children: true, parent: true, products: { take: 10 }, _count: { select: { products: true } } },
+    include: { children: { include: { _count: { select: { products: true } } } }, parent: true, products: { take: 10 }, _count: { select: { products: true } } },
   })
   if (!category) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(category)

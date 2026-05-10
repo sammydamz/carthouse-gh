@@ -5,7 +5,7 @@ import { bustCategories } from '@/lib/cache'
 
 export async function GET() {
   const categories = await prisma.category.findMany({
-    include: { children: true, _count: { select: { products: true } } },
+    include: { children: { include: { _count: { select: { products: true } } } }, _count: { select: { products: true } } },
     orderBy: { name: 'asc' },
   })
   return NextResponse.json(categories)
